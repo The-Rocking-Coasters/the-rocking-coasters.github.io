@@ -26,20 +26,56 @@
       </div>
 
       <div class="contact-form-panel">
-        <form @submit.prevent class="contact-form">
+        <div v-if="submitted" class="success-message">
+          <p>{{ $t('contact.success') }}</p>
+          <button @click="submitted = false" class="retro-button">{{ $t('contact.submit') }}</button>
+        </div>
+        <form v-else @submit.prevent="handleSubmit" class="contact-form">
           <div class="form-group">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-input" />
+            <label class="form-label">{{ $t('contact.name') }}</label>
+            <input 
+              v-model="form.name" 
+              type="text" 
+              class="form-input" 
+              required 
+              :disabled="loading"
+            />
           </div>
           <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-input" />
+            <label class="form-label">{{ $t('contact.email') }}</label>
+            <input 
+              v-model="form.email" 
+              type="email" 
+              class="form-input" 
+              required 
+              :disabled="loading"
+            />
           </div>
           <div class="form-group">
-            <label class="form-label">Message</label>
-            <textarea rows="4" class="form-input textarea"></textarea>
+            <label class="form-label">{{ $t('contact.message') }}</label>
+            <textarea 
+              v-model="form.message" 
+              rows="4" 
+              class="form-input textarea" 
+              required 
+              :disabled="loading"
+            ></textarea>
           </div>
-          <button type="submit" class="retro-button full-width">Send Message</button>
+          
+          <!-- Honeypot field for anti-spam (hidden from users) -->
+          <div class="hidden-field" aria-hidden="true">
+            <input v-model="form._honeypot" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <button 
+            type="submit" 
+            class="retro-button full-width" 
+            :disabled="loading"
+          >
+            {{ loading ? $t('contact.sending') : $t('contact.submit') }}
+          </button>
+          
+          <p v-if="error" class="error-message">{{ error }}</p>
         </form>
       </div>
     </div>
@@ -52,6 +88,9 @@
 
 <script setup>
 import { Mail, Phone, MapPin, Instagram, Facebook, Youtube } from 'lucide-vue-next';
+import { ref, reactive } from 'vue';
+
+const { t } = useI18n();
 
 defineProps({
   title: {
@@ -83,6 +122,45 @@ const getIcon = (name) => {
   const icons = { Mail, Phone, MapPin, Instagram, Facebook, Youtube };
   return icons[name] || Mail;
 }
+
+const form = reactive({
+  name: '',
+  email: '',
+  message: '',
+  _honeypot: ''
+});
+
+const loading = ref(false);
+const submitted = ref(false);
+const error = ref('');
+
+const handleSubmit = async () => {
+  loading.value = true;
+  error.value = '';
+  
+  try {
+    const response = await $fetch('/api/contact', {
+      method: 'POST',
+      body: form
+    });
+    
+    if (response.success) {
+      submitted.value = true;
+      // Reset form
+      form.name = '';
+      form.email = '';
+      form.message = '';
+      form._honeypot = '';
+    } else {
+      error.value = t('contact.error');
+    }
+  } catch (err) {
+    console.error('Form submission error:', err);
+    error.value = t('contact.error');
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -255,6 +333,34 @@ const getIcon = (name) => {
 
 .form-input.textarea {
   resize: none;
+}
+
+.hidden-field {
+  display: none;
+}
+
+.success-message {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.success-message p {
+  color: var(--color-gold);
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  font-family: var(--font-rock), cursive;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.retro-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .full-width {

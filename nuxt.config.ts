@@ -14,16 +14,13 @@ export default defineNuxtConfig({
   modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n'],
   i18n: {
     locales: [
-      { code: 'nl', name: 'Nederlands', file: 'nl.json' },
-      { code: 'en', name: 'English', file: 'en.json' }
+      { code: 'nl', language: 'nl-NL', name: 'Nederlands', file: 'nl.json' },
+      { code: 'en', language: 'en-US', name: 'English', file: 'en.json' }
     ],
     defaultLocale: 'nl',
     strategy: 'prefix_except_default',
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: 'i18n_redirected',
-      redirectOn: 'root'
-    }
+    detectBrowserLanguage: false,
+    baseUrl: 'https://the-rocking-coasters.github.io'
   },
   studio: {
     repository: {
@@ -39,6 +36,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
+        { rel: 'icon', type: 'image/webp', href: '/favicon.webp' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;700&display=swap' }

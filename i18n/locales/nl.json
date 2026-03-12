@@ -4,5 +4,15 @@
   "location": "Locatie",
   "entranceFee": "Entree",
   "toggleMap": "Kaart tonen/verbergen",
-  "free": "Gratis!"
+  "free": "Gratis!",
+  "contact": {
+    "name": "Naam",
+    "email": "E-mail",
+    "message": "Bericht",
+    "submit": "Verstuur Bericht",
+    "sending": "Verzenden...",
+    "success": "Bedankt! Je bericht is ontvangen en we nemen zo snel mogelijk contact op.",
+    "error": "Er is iets misgegaan bij het versturen van je bericht. Probeer het later opnieuw.",
+    "required": "Dit veld is verplicht"
+  }
 }
