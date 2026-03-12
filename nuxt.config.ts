@@ -33,7 +33,7 @@ export default defineNuxtConfig({
   ogImage: {
     enabled: true,
     defaults: {
-      url: '/images/og-main.png',
+      url: '/images/og-main.jpg',
       width: 1200,
       height: 630,
       alt: 'The Rocking Coasters'

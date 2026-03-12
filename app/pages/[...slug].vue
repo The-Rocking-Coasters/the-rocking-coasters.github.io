@@ -24,8 +24,12 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: () => `https://therockingcoasters.nl${route.path}`,
   twitterCard: 'summary_large_image',
-  ogImage: 'https://therockingcoasters.nl/images/og-main.png',
-  twitterImage: 'https://therockingcoasters.nl/images/og-main.png',
+  ogImage: 'https://therockingcoasters.nl/images/og-main.jpg',
+  ogImageSecureUrl: 'https://therockingcoasters.nl/images/og-main.jpg',
+  ogImageType: 'image/jpeg',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  twitterImage: 'https://therockingcoasters.nl/images/og-main.jpg',
 })
 
 // Removed dynamic OG image component to use static fallback
