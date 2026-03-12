@@ -39,10 +39,10 @@ contactInfo:
     value: Oss, Nederland
 socials:
   - icon: Facebook
-    link: https://facebook.com/rockingcoasters
+    link: https://facebook.com/therockingcoasters
   - icon: Instagram
     link: https://instagram.com/rockingcoasters
-  - icon: Youtube
+  - icon: YouTube
     link: https://youtube.com/rockingcoasters
 subtitle: Boek de Rocking Coasters voor je volgende evenement
 title: Neem Contact Op

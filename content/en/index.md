@@ -39,7 +39,7 @@ contactInfo:
     value: Oss, Netherlands
 socials:
   - icon: Facebook
-    link: https://facebook.com/rockingcoasters
+    link: https://facebook.com/therockingcoasters
   - icon: Instagram
     link: https://instagram.com/rockingcoasters
   - icon: YouTube
