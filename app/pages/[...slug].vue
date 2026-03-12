@@ -24,11 +24,14 @@ useSeoMeta({
   ogType: 'website',
   ogUrl: () => `https://therockingcoasters.nl${route.path}`,
   twitterCard: 'summary_large_image',
+  ogImage: 'https://therockingcoasters.nl/images/og-main.png',
+  twitterImage: 'https://therockingcoasters.nl/images/og-main.png',
 })
 
-defineOgImageComponent('RockingCoasters', {
-  alt: page.value?.title || 'The Rocking Coasters',
-})
+// Removed dynamic OG image component to use static fallback
+// defineOgImageComponent('RockingCoasters', {
+//   alt: page.value?.title || 'The Rocking Coasters',
+// })
 
 if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })

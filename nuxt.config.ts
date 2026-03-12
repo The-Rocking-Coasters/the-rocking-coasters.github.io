@@ -31,13 +31,12 @@ export default defineNuxtConfig({
     }
   },
   ogImage: {
+    enabled: true,
     defaults: {
-      component: 'RockingCoasters',
-      props: {
-        image: '/images/band.jpg',
-        logo: '/images/logo.svg',
-        alt: 'The Rocking Coasters'
-      }
+      url: '/images/og-main.png',
+      width: 1200,
+      height: 630,
+      alt: 'The Rocking Coasters'
     }
   },
   seo: {
