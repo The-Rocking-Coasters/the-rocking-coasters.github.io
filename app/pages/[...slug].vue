@@ -21,6 +21,8 @@ useSeoMeta({
   ogTitle: () => page.value?.title,
   description: () => page.value?.description,
   ogDescription: () => page.value?.description,
+  ogType: 'website',
+  ogUrl: () => `https://therockingcoasters.nl${route.path}`,
   twitterCard: 'summary_large_image',
 })
 

@@ -40,6 +40,9 @@ export default defineNuxtConfig({
       }
     }
   },
+  seo: {
+    fallbackTitle: false,
+  },
   i18n: {
     locales: [
       { code: 'nl', language: 'nl-NL', name: 'Nederlands', file: 'nl.json' },
