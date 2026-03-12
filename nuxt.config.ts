@@ -11,7 +11,35 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
-  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n'],
+  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
+  site: {
+    url: 'https://therockingcoasters.nl',
+    name: 'The Rocking Coasters',
+    description: '50s & 60s Rock n Roll Band',
+    defaultLocale: 'nl',
+    indexable: true,
+  },
+  schemaOrg: {
+    identity: {
+      type: 'MusicGroup',
+      name: 'The Rocking Coasters',
+      url: 'https://therockingcoasters.nl',
+      logo: '/images/logo.svg', // Assuming this is available
+      sameAs: [
+        'https://www.facebook.com/TheRockingCoasters/'
+      ]
+    }
+  },
+  ogImage: {
+    defaults: {
+      component: 'RockingCoasters',
+      props: {
+        image: '/images/band.jpg',
+        logo: '/images/logo.svg',
+        alt: 'The Rocking Coasters'
+      }
+    }
+  },
   i18n: {
     locales: [
       { code: 'nl', language: 'nl-NL', name: 'Nederlands', file: 'nl.json' },
@@ -20,7 +48,13 @@ export default defineNuxtConfig({
     defaultLocale: 'nl',
     strategy: 'prefix_except_default',
     detectBrowserLanguage: false,
-    baseUrl: 'https://the-rocking-coasters.github.io'
+    baseUrl: 'https://therockingcoasters.nl'
+  },
+  robots: {
+    enabled: true,
+  },
+  sitemap: {
+    enabled: true,
   },
   studio: {
     repository: {

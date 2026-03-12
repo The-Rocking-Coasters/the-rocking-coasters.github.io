@@ -16,6 +16,18 @@ const { data: page } = await useAsyncData(route.path, () => {
   return queryCollection('content').path(path).first()
 })
 
+useSeoMeta({
+  title: () => page.value?.title,
+  ogTitle: () => page.value?.title,
+  description: () => page.value?.description,
+  ogDescription: () => page.value?.description,
+  twitterCard: 'summary_large_image',
+})
+
+defineOgImageComponent('RockingCoasters', {
+  alt: page.value?.title || 'The Rocking Coasters',
+})
+
 if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
 }
