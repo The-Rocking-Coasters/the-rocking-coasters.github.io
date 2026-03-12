@@ -34,7 +34,7 @@ contactInfo:
   - icon: Mail
     value: bookings@therockingcoasters.nl
   - icon: Phone
-    value: +31 (0) 6 281 88 298
+    value: +31 (0) 85 020 4733
   - icon: MapPin
     value: Oss, Netherlands
 socials:
