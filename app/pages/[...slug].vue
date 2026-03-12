@@ -4,7 +4,6 @@ const route = useRoute()
 const { locale } = useI18n()
 
 const { data: page } = await useAsyncData(route.path, () => {
-  const { locale } = useI18n()
   let path = route.path
 
   if (locale.value === 'nl' && !path.startsWith('/nl')) {
