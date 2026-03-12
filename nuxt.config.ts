@@ -1,4 +1,13 @@
 export default defineNuxtConfig({
+  ssr: true,
+  nitro: {
+    prerender: {
+      autoSubfolderIndex: true
+    }
+  },
+  $production: {
+    studio: false
+  },
   future: {
     compatibilityVersion: 4,
   },
