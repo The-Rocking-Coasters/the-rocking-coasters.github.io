@@ -23,20 +23,18 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm install
-        working-directory: website
 
       - name: Generate static site
         run: npm run generate
-        working-directory: website
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: website/.output/public
+          path: .output/public
 
   deploy:
     needs: build
