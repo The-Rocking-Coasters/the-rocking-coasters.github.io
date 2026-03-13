@@ -15,7 +15,12 @@
     <div v-if="sortedMembers.length > 0" class="members-grid">
       <div v-for="(member, index) in sortedMembers" :key="index" class="member-card">
         <div class="member-image-wrapper">
-          <img :src="member.image" :alt="member.name" class="member-image" />
+          <img 
+            :src="member.image" 
+            :alt="member.name" 
+            class="member-image" 
+            :style="{ objectPosition: member.image_alignment || 'center' }"
+          />
           <div class="member-image-overlay"></div>
         </div>
 

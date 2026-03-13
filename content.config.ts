@@ -16,6 +16,7 @@ export default defineContentConfig({
         bio_en: z.string(),
         bio_nl: z.string(),
         image: z.string(),
+        image_alignment: z.string().optional(),
         instruments: z.string(),
         order: z.number()
       })

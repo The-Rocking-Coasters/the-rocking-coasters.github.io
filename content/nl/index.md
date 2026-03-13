@@ -13,20 +13,7 @@ description: 50s & 60s Rock n Roll Band
 The Rocking Coasters zijn meer dan alleen een band; we zijn een tijdmachine. Gebaseerd op een woordspeling waarbij coasters schepen zijn die op de golven wiegen (rocking), en de viltjes (coasters) onder je favoriete drankje terwijl er een plaat draait, brengen we de authentieke jaren 50 en 60 rock 'n' roll ervaring tot leven. Van energieke danstunes tot soepele ballads, wij garanderen een avond die je niet snel zult vergeten.
 ::
 
-::media
----
-items:
-  - url: /images/band.jpg
-    alt: Live bij The Blue Note
-  - url: /images/band.jpg
-    alt: Studio Sessie
-  - url: /images/band.jpg
-    alt: Backstage
-  - url: /images/band.jpg
-    alt: Fan foto
-title: Galerij
----
-::
+:media{title="Galerij"}
 
 ::contact
 ---

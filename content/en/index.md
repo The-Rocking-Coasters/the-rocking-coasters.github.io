@@ -15,15 +15,6 @@ The Rocking Coasters are more than just a band; we're a time machine. Based on a
 
 ::media
 ---
-items:
-  - url: /images/band.jpg
-    alt: Live at The Blue Note
-  - url: /images/band.jpg
-    alt: Studio Session
-  - url: /images/band.jpg
-    alt: Backstage
-  - url: /images/band.jpg
-    alt: Fan photo
 title: Gallery
 ---
 ::

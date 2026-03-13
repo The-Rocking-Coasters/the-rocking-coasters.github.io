@@ -1,3 +1,6 @@
+import { readdirSync, existsSync, writeFileSync } from 'fs'
+import { resolve } from 'path'
+
 export default defineNuxtConfig({
   ssr: true,
   nitro: {
@@ -12,6 +15,33 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
+  hooks: {
+    'build:before': (): void => {
+      type MediaItem = {
+          url: string
+          alt: string
+          type: string
+      };
+      const mediaDir = resolve(__dirname, 'public/images/media')
+      const outputJson = resolve(__dirname, 'public/media-list.json')
+
+      if (existsSync(mediaDir)) {
+        const files: string[] = readdirSync(mediaDir)
+        const mediaItems : MediaItem[] = files
+          .filter((file: string) => /\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg)$/i.test(file))
+          .map((file: string) => ({
+            url: `/images/media/${file}`,
+            alt: file.split('.').slice(0, -1).join('.').replace(/[_-]/g, ' '),
+            type: /\.(mp4|webm|ogg)$/i.test(file) ? 'video' : 'image'
+          }))
+
+        writeFileSync(outputJson, JSON.stringify(mediaItems, null, 2))
+        console.log(`[Media Plugin] Generated media-list.json with ${mediaItems.length} items.`)
+      } else {
+        console.warn(`[Media Plugin] Media directory not found: ${mediaDir}`)
+      }
+    }
+  },
   site: {
     url: 'https://therockingcoasters.nl',
     name: 'The Rocking Coasters',
@@ -86,6 +116,7 @@ export default defineNuxtConfig({
         '@vue/devtools-core',
         '@vue/devtools-kit',
         'lucide-vue-next',
+        '@unhead/schema-org/vue',
       ]
     }
   },
