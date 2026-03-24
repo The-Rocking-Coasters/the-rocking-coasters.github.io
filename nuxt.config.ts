@@ -165,20 +165,6 @@ export default defineNuxtConfig({
         '@unhead/schema-org/vue',
       ]
     },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks(id: string) {
-            if (id.includes('node_modules/@nuxtjs/i18n') || id.includes('node_modules/vue-i18n')) {
-              return 'i18n'
-            }
-            if (id.includes('node_modules/@nuxt/content') || id.includes('node_modules/remark') || id.includes('node_modules/micromark') || id.includes('node_modules/mdast')) {
-              return 'content'
-            }
-          }
-        }
-      }
-    }
   },
   css: ['~/assets/css/main.css'],
   compatibilityDate: '2024-04-03',
