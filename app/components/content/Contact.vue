@@ -19,64 +19,50 @@
         </div>
 
         <div class="social-links">
-          <a v-for="(social, index) in socials" :key="index" :href="social.link" target="_blank" class="social-link">
+          <a v-for="(social, index) in socials" :key="index" :href="social.link" target="_blank" class="social-link" :aria-label="social.icon">
             <component :is="getIcon(social.icon)" size="32" />
           </a>
         </div>
       </div>
 
-      <div class="contact-form-panel">
-        <div v-if="submitted" class="success-message">
-          <p>{{ $t('contact.success') }}</p>
-          <button @click="submitted = false" class="retro-button">{{ $t('contact.submit') }}</button>
+      <div class="contact-reasons-panel">
+        <h3 class="reasons-title">{{ $t('contact.whyUs') }}</h3>
+        <ul class="reasons-list">
+          <li class="reason-item">
+            <span class="reason-icon">🎸</span>
+            <span>{{ $t('contact.reason1') }}</span>
+          </li>
+          <li class="reason-item">
+            <span class="reason-icon">🎤</span>
+            <span>{{ $t('contact.reason2') }}</span>
+          </li>
+          <li class="reason-item">
+            <span class="reason-icon">🕺</span>
+            <span>{{ $t('contact.reason3') }}</span>
+          </li>
+          <li class="reason-item">
+            <span class="reason-icon">🎶</span>
+            <span>{{ $t('contact.reason4') }}</span>
+          </li>
+          <li class="reason-item">
+            <span class="reason-icon">⭐</span>
+            <span>{{ $t('contact.reason5') }}</span>
+          </li>
+        </ul>
+        <div class="stat-row">
+          <div class="stat-item">
+            <span class="stat-number">{{ totalShows }}+</span>
+            <span class="stat-label">{{ $t('contact.statShows') }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ yearsActive }}+</span>
+            <span class="stat-label">{{ $t('contact.statYears') }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">{{ $t('contact.statVibes') }}</span>
+          </div>
         </div>
-        <form v-else @submit.prevent="handleSubmit" class="contact-form">
-          <div class="form-group">
-            <label class="form-label">{{ $t('contact.name') }}</label>
-            <input 
-              v-model="form.name" 
-              type="text" 
-              class="form-input" 
-              required 
-              :disabled="loading"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">{{ $t('contact.email') }}</label>
-            <input 
-              v-model="form.email" 
-              type="email" 
-              class="form-input" 
-              required 
-              :disabled="loading"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">{{ $t('contact.message') }}</label>
-            <textarea 
-              v-model="form.message" 
-              rows="4" 
-              class="form-input textarea" 
-              required 
-              :disabled="loading"
-            ></textarea>
-          </div>
-          
-          <!-- Honeypot field for anti-spam (hidden from users) -->
-          <div class="hidden-field" aria-hidden="true">
-            <input v-model="form._honeypot" type="text" tabindex="-1" autocomplete="off" />
-          </div>
-
-          <button 
-            type="submit" 
-            class="retro-button full-width" 
-            :disabled="loading"
-          >
-            {{ loading ? $t('contact.sending') : $t('contact.submit') }}
-          </button>
-          
-          <p v-if="error" class="error-message">{{ error }}</p>
-        </form>
       </div>
     </div>
     
@@ -87,10 +73,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Mail, Phone, MapPin, Instagram, Facebook, Youtube } from 'lucide-vue-next';
-import { ref, reactive } from 'vue';
-
-const { t } = useI18n();
 
 defineProps({
   title: {
@@ -118,49 +102,31 @@ defineProps({
   }
 })
 
+const FOUNDED_YEAR = 2011;
+const HISTORICAL_SHOWS_PER_YEAR = 12;
+const HISTORICAL_END_YEAR = 2025;
+
+const yearsActive = new Date().getFullYear() - FOUNDED_YEAR;
+
+const { data: performances } = await useAsyncData('performances-stats', () =>
+  queryCollection('performances').all()
+);
+
+const totalShows = computed(() => {
+  const historicalShows = (HISTORICAL_END_YEAR - FOUNDED_YEAR + 1) * HISTORICAL_SHOWS_PER_YEAR;
+  const today = new Date();
+  const currentYearShows = (performances.value || []).filter(p => {
+    const d = new Date(p.date);
+    return d.getFullYear() >= 2026 && d <= today;
+  }).length;
+  return historicalShows + currentYearShows;
+});
+
 const getIcon = (name) => {
   const icons = { Mail, Phone, MapPin, Instagram, Facebook, Youtube };
   return icons[name] || Mail;
 }
 
-const form = reactive({
-  name: '',
-  email: '',
-  message: '',
-  _honeypot: ''
-});
-
-const loading = ref(false);
-const submitted = ref(false);
-const error = ref('');
-
-const handleSubmit = async () => {
-  loading.value = true;
-  error.value = '';
-  
-  try {
-    const response = await $fetch('/api/contact', {
-      method: 'POST',
-      body: form
-    });
-    
-    if (response.success) {
-      submitted.value = true;
-      // Reset form
-      form.name = '';
-      form.email = '';
-      form.message = '';
-      form._honeypot = '';
-    } else {
-      error.value = t('contact.error');
-    }
-  } catch (err) {
-    console.error('Form submission error:', err);
-    error.value = t('contact.error');
-  } finally {
-    loading.value = false;
-  }
-};
 </script>
 
 <style scoped>
@@ -286,85 +252,73 @@ const handleSubmit = async () => {
   color: var(--color-white);
 }
 
-.contact-form-panel {
+.contact-reasons-panel {
   flex: 1;
   width: 100%;
   max-width: 450px;
   background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
   border: 2px solid var(--color-gold);
   padding: 2rem;
-  position: relative;
-  z-index: 10;
-}
-
-.contact-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-label {
+.reasons-title {
   font-family: var(--font-rock), cursive;
   color: var(--color-gold);
   text-transform: uppercase;
-  font-size: 0.875rem;
-  margin-bottom: 0.25rem;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+  margin: 0;
 }
 
-.form-input {
-  background-color: rgba(0, 0, 0, 0.8);
-  border: none;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
-  padding: 0.5rem;
-  color: var(--color-white);
-  outline: none;
-  transition: border-color 0.3s ease;
+.reasons-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.form-input:focus {
-  border-color: var(--color-gold);
+.reason-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
 }
 
-.form-input.textarea {
-  resize: none;
-}
-
-.hidden-field {
-  display: none;
-}
-
-.success-message {
-  text-align: center;
-  padding: 2rem 0;
-}
-
-.success-message p {
-  color: var(--color-gold);
+.reason-icon {
   font-size: 1.25rem;
-  margin-bottom: 2rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+  padding-top: 1.5rem;
+  margin-top: auto;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-number {
   font-family: var(--font-rock), cursive;
+  color: var(--color-gold);
+  font-size: 1.75rem;
 }
 
-.error-message {
-  color: #ff4444;
-  font-size: 0.875rem;
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.retro-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.full-width {
-  width: 100%;
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
 }
 
 .footer-copy {

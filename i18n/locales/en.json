@@ -2,8 +2,11 @@
   "instruments": "Instruments",
   "tickets": "Tickets",
   "location": "Location",
-  "entranceFee": "Entrance",
-  "toggleMap": "Toggle map",
+  "entranceFee": "Entrance fee",
+  "toggleMap": "Show/hide map",
+  "pastShows": "Past Shows",
+  "showPastShows": "🎸 Dig Through The Crates ({count})",
+  "hidePastShows": "🎸 Put 'Em Back",
   "free": "Free!",
   "contact": {
     "name": "Name",
@@ -13,6 +16,15 @@
     "sending": "Sending...",
     "success": "Thank you! Your message has been received and we will get back to you soon.",
     "error": "Something went wrong. Please try again later.",
-    "required": "Required"
+    "required": "Required",
+    "whyUs": "Why us?",
+    "reason1": "We play rock 'n' roll the way it was meant to be: 50s and 60s, straight from the heart.",
+    "reason2": "Our shows are packed with energy — standing still is not easy.",
+    "reason3": "Dancing is allowed. Encouraged, even.",
+    "reason4": "Expect a solid stack of classics you'll recognise straight away.",
+    "reason5": "And above all: we play because we can't get enough of it ourselves.",
+    "statShows": "Shows",
+    "statYears": "Years",
+    "statVibes": "Good Vibes"
   }
 }

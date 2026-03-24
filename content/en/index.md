@@ -5,7 +5,7 @@ description: 50s & 60s Rock n Roll Band
 
 :creative-nav
 
-:hero{alt="The Rocking Coasters" background-image="/images/band.jpg" logo-image="/images/logo.svg"}
+:hero{alt="The Rocking Coasters" background-image="/images/band.webp" logo-image="/images/logo.svg"}
 
 :agenda{title="Upcoming Gigs"}
 

@@ -10,9 +10,12 @@
         v-for="(item, index) in displayItems" 
         :key="index" 
         class="media-item"
+        :class="{ 'is-touched': touchedIndex === index }"
         @click="openLightbox(index)"
+        @touchstart.passive="touchedIndex = index"
+        @touchend.passive="touchedIndex = null"
       >
-        <img :src="item.url" :alt="item.alt || 'Media'" class="media-img" />
+        <img :src="item.thumbnail ?? item.url" :alt="item.alt || 'Media'" class="media-img" />
         <div class="media-overlay">
           <div v-if="item.type === 'video'" class="video-play-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
@@ -95,6 +98,7 @@ const props = defineProps({
   }
 })
 
+const touchedIndex = ref(null)
 const dynamicItems = ref([])
 const isOpen = ref(false)
 const selectedIndex = ref(0)
@@ -202,7 +206,7 @@ if (process.client) {
   transition: all 0.3s ease;
 }
 
-.media-item:hover {
+.media-item:hover, .media-item.is-touched {
   box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
 }
 
@@ -214,7 +218,7 @@ if (process.client) {
   transition: all 0.5s ease;
 }
 
-.media-item:hover .media-img {
+.media-item:hover .media-img, .media-item.is-touched .media-img {
   filter: grayscale(0);
   transform: scale(1.1);
 }
@@ -230,7 +234,7 @@ if (process.client) {
   transition: all 0.3s ease;
 }
 
-.media-item:hover .media-overlay {
+.media-item:hover .media-overlay, .media-item.is-touched .media-overlay {
   background-color: rgba(212, 175, 55, 0.2);
   opacity: 1;
 }

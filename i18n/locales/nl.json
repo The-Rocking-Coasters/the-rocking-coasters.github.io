@@ -4,6 +4,9 @@
   "location": "Locatie",
   "entranceFee": "Entree",
   "toggleMap": "Kaart tonen/verbergen",
+  "pastShows": "Voorbije Shows",
+  "showPastShows": "🎸 Graaf Door Het Archief ({count})",
+  "hidePastShows": "🎸 Sluit Het Archief",
   "free": "Gratis!",
   "contact": {
     "name": "Naam",
@@ -13,6 +16,15 @@
     "sending": "Verzenden...",
     "success": "Bedankt! Je bericht is ontvangen en we nemen zo snel mogelijk contact op.",
     "error": "Er is iets misgegaan bij het versturen van je bericht. Probeer het later opnieuw.",
-    "required": "Dit veld is verplicht"
+    "required": "Dit veld is verplicht",
+    "whyUs": "Waarom wij?",
+    "reason1": "We spelen rock 'n' roll zoals het bedoeld is: jaren 50 en 60, recht uit het hart.",
+    "reason2": "Onze shows zitten vol energie — stil blijven staan is lastig.",
+    "reason3": "Dansen mag. Graag zelfs.",
+    "reason4": "Verwacht een flinke stapel klassiekers die je meteen herkent.",
+    "reason5": "En boven alles: we spelen omdat we er zelf ook geen genoeg van krijgen.",
+    "statShows": "Shows",
+    "statYears": "Jaar",
+    "statVibes": "Good Vibes"
   }
 }

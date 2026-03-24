@@ -6,11 +6,11 @@
     </div>
     
     <div class="hero-content">
-      <img :src="logoImage" alt="The Rocking Coasters Logo" class="hero-logo" />
+      <img :src="logoImage" alt="The Rocking Coasters Logo" class="hero-logo" fetchpriority="high" loading="eager" width="1600" height="900" />
     </div>
 
     <div class="hero-scroll-indicator">
-      <NuxtLink to="#agenda" class="scroll-link">
+      <NuxtLink to="#agenda" class="scroll-link" aria-label="Scroll to agenda">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
         </svg>
@@ -23,7 +23,7 @@
 defineProps({
   backgroundImage: {
     type: String,
-    default: '/images/band.jpg'
+    default: '/images/band.webp'
   },
   logoImage: {
     type: String,

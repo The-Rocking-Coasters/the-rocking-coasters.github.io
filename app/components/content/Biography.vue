@@ -13,7 +13,7 @@
 
     <!-- Members Section -->
     <div v-if="sortedMembers.length > 0" class="members-grid">
-      <div v-for="(member, index) in sortedMembers" :key="index" class="member-card">
+      <div v-for="(member, index) in sortedMembers" :key="index" class="member-card" :class="{ 'is-touched': touchedIndex === index }" @touchstart.passive="touchedIndex = index" @touchend.passive="touchedIndex = null">
         <div class="member-image-wrapper">
           <img 
             :src="member.image" 
@@ -43,6 +43,7 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 const { locale } = useI18n()
 
 const props = defineProps({
@@ -55,6 +56,8 @@ const props = defineProps({
 const { data: members } = await useAsyncData('members', () => {
   return queryCollection('members').all()
 })
+
+const touchedIndex = ref(null)
 
 const sortedMembers = computed(() => {
   if (!members.value) return []
@@ -126,7 +129,7 @@ const sortedMembers = computed(() => {
   height: 100%;
 }
 
-.member-card:hover {
+.member-card:hover, .member-card.is-touched {
   background-color: rgba(212, 175, 55, 0.1);
 }
 
@@ -147,7 +150,7 @@ const sortedMembers = computed(() => {
   transform: scale(1.05);
 }
 
-.member-card:hover .member-image {
+.member-card:hover .member-image, .member-card.is-touched .member-image {
   filter: grayscale(0);
   transform: scale(1.1);
 }
@@ -184,7 +187,7 @@ const sortedMembers = computed(() => {
   transition: all 0.5s ease;
 }
 
-.member-card:hover .member-bio {
+.member-card:hover .member-bio, .member-card.is-touched .member-bio {
   -webkit-line-clamp: unset;
 }
 
@@ -221,7 +224,7 @@ const sortedMembers = computed(() => {
   transition: all 0.5s ease;
 }
 
-.member-card:hover .member-decoration {
+.member-card:hover .member-decoration, .member-card.is-touched .member-decoration {
   background-color: rgba(212, 175, 55, 0.2);
 }
 </style>
