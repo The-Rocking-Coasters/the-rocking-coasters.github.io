@@ -263,7 +263,7 @@ const formatDate = (dateStr, part) => {
   font-size: 0.75rem;
   text-transform: uppercase;
   margin-top: 0.2rem;
-  opacity: 0.6;
+  color: #d1d5db;
   letter-spacing: 0.05em;
 }
 
@@ -292,7 +292,7 @@ const formatDate = (dateStr, part) => {
   flex-wrap: wrap;
   align-items: center;
   gap: 1.5rem;
-  color: #9ca3af;
+  color: #d1d5db;
   font-size: 1.1rem;
 }
 
@@ -319,7 +319,7 @@ const formatDate = (dateStr, part) => {
   width: 100%;
   margin: 0;
   font-size: 0.95rem;
-  color: #9ca3af;
+  color: #d1d5db;
   letter-spacing: 0.02em;
 }
 
@@ -391,7 +391,7 @@ const formatDate = (dateStr, part) => {
 
 .agenda-empty {
   text-align: center;
-  color: #6b7280;
+  color: #d1d5db;
   font-style: italic;
   padding: 4rem 0;
   font-size: 1.25rem;
@@ -407,7 +407,7 @@ const formatDate = (dateStr, part) => {
 .past-shows-toggle {
   background: none;
   border: 1px dashed rgba(255, 255, 255, 0.2);
-  color: #6b7280;
+  color: #d1d5db;
   font-family: var(--font-rock), cursive;
   font-size: 1rem;
   letter-spacing: 0.08em;
@@ -419,7 +419,7 @@ const formatDate = (dateStr, part) => {
 
 .past-shows-toggle:hover {
   border-color: rgba(255, 255, 255, 0.4);
-  color: #9ca3af;
+  color: #d1d5db;
 }
 
 /* ── PAST SHOWS SECTION ── */

@@ -15,7 +15,16 @@
         @touchstart.passive="touchedIndex = index"
         @touchend.passive="touchedIndex = null"
       >
-        <img :src="item.thumbnail ?? item.url" :alt="item.alt || 'Media'" class="media-img" />
+        <video
+          v-if="item.thumbnailType === 'video/webm'"
+          :src="item.thumbnail"
+          class="media-img"
+          autoplay
+          muted
+          loop
+          playsinline
+        ></video>
+        <img v-else :src="item.thumbnail ?? item.url" :alt="item.alt || 'Media'" class="media-img" />
         <div class="media-overlay">
           <div v-if="item.type === 'video'" class="video-play-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">

@@ -2,6 +2,7 @@ import { readdirSync, existsSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { execSync } from 'child_process'
 
+// noinspection JSUnusedGlobalSymbols
 export default defineNuxtConfig({
   ssr: true,
   nitro: {
@@ -15,6 +16,10 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
+  experimental: {
+    // @ts-ignore - inlineStyles is valid in Nuxt 4 but may not be typed in the current version
+    inlineStyles: true,
+  },
   modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
   hooks: {
     'build:before': (): void => {
@@ -23,6 +28,7 @@ export default defineNuxtConfig({
           alt: string
           type: string
           thumbnail?: string
+          thumbnailType?: string
       };
       const mediaDir = resolve(__dirname, 'public/images/media')
       const outputJson = resolve(__dirname, 'public/media-list.json')
@@ -30,7 +36,16 @@ export default defineNuxtConfig({
       if (existsSync(mediaDir)) {
         const files: string[] = readdirSync(mediaDir)
         const mediaItems : MediaItem[] = files
-          .filter((file: string) => /\.(jpg|jpeg|png|webp|mp4|webm|ogg)$/i.test(file))
+          .filter((file: string) => {
+            if (!/\.(jpg|jpeg|png|webp|mp4|webm|ogg)$/i.test(file)) return false
+            // Exclude WebM files that are thumbnails for a video (same base name as an mp4/ogg)
+            if (/\.webm$/i.test(file)) {
+              const baseName = file.split('.').slice(0, -1).join('.')
+              const hasSourceVideo = files.some(f => new RegExp(`^${baseName}\\.(mp4|ogg)$`, 'i').test(f))
+              if (hasSourceVideo) return false
+            }
+            return true
+          })
           .map((file: string) => {
             const isVideo = /\.(mp4|webm|ogg)$/i.test(file)
             const item: MediaItem = {
@@ -40,29 +55,24 @@ export default defineNuxtConfig({
             }
             if (isVideo) {
               const baseName = file.split('.').slice(0, -1).join('.')
-              const gifName = `${baseName}.gif`
+              const gifName = `${baseName}.webm`
               const gifPath = resolve(mediaDir, gifName)
               if (!existsSync(gifPath)) {
                 try {
                   const videoPath = resolve(mediaDir, file)
-                  const palettePath = resolve(mediaDir, `${baseName}_palette.png`)
                   const filters = 'fps=24,scale=480:-1:flags=lanczos'
                   execSync(
-                    `ffmpeg -y -t 4 -i "${videoPath}" -vf "${filters},palettegen=stats_mode=diff" "${palettePath}"`,
+                    `ffmpeg -y -t 4 -i "${videoPath}" -vf "${filters}" -c:v libvpx-vp9 -b:v 0 -crf 40 -an "${gifPath}"`,
                     { stdio: 'pipe' }
                   )
-                  execSync(
-                    `ffmpeg -y -t 4 -i "${videoPath}" -i "${palettePath}" -lavfi "${filters} [x]; [x][1:v] paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -loop 0 "${gifPath}"`,
-                    { stdio: 'pipe' }
-                  )
-                  try { execSync(`rm "${palettePath}"`, { stdio: 'pipe' }) } catch {}
-                  console.log(`[Media Plugin] Generated GIF thumbnail: ${gifName}`)
+                  console.log(`[Media Plugin] Generated WebM thumbnail: ${gifName}`)
                 } catch (e) {
                   console.warn(`[Media Plugin] Could not generate GIF for ${file} (ffmpeg not available?)`)
                 }
               }
               if (existsSync(gifPath)) {
                 item.thumbnail = `/images/media/${gifName}`
+                item.thumbnailType = 'video/webm'
               }
             }
             return item
@@ -154,6 +164,20 @@ export default defineNuxtConfig({
         '@vue/devtools-kit',
         '@unhead/schema-org/vue',
       ]
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (id.includes('node_modules/@nuxtjs/i18n') || id.includes('node_modules/vue-i18n')) {
+              return 'i18n'
+            }
+            if (id.includes('node_modules/@nuxt/content') || id.includes('node_modules/remark') || id.includes('node_modules/micromark') || id.includes('node_modules/mdast')) {
+              return 'content'
+            }
+          }
+        }
+      }
     }
   },
   css: ['~/assets/css/main.css'],
