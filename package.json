@@ -13,10 +13,10 @@
     "@nuxtjs/i18n": "^10.2.3",
     "@nuxtjs/seo": "^3.4.0",
     "better-sqlite3": "^12.6.2",
-    "nuxt": "^4.4.2",
-    "nuxt-studio": "^1.4.0"
+    "nuxt": "^4.4.2"
   },
   "devDependencies": {
+    "nuxt-studio": "^1.4.0",
     "lucide-vue-next": "^0.577.0",
     "nuxt-component-meta": "^0.17.2"
   },

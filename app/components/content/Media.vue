@@ -5,10 +5,32 @@
       <div class="media-divider"></div>
     </div>
 
+    <!-- Filter bar -->
+    <div v-if="dateGroups.length > 1 || hasOtherItems" class="media-filters">
+      <button
+        class="media-filter-btn"
+        :class="{ active: activeFilter === null }"
+        @click="activeFilter = null"
+      >{{ $t('mediaFilterAll') }}</button>
+      <button
+        v-for="group in dateGroups"
+        :key="group.date"
+        class="media-filter-btn"
+        :class="{ active: activeFilter === group.date }"
+        @click="activeFilter = group.date"
+      >{{ group.label }}</button>
+      <button
+        v-if="hasOtherItems"
+        class="media-filter-btn"
+        :class="{ active: activeFilter === '__other__' }"
+        @click="activeFilter = '__other__'"
+      >{{ $t('mediaFilterOther') }}</button>
+    </div>
+
     <div class="media-grid">
-      <div 
-        v-for="(item, index) in displayItems" 
-        :key="index" 
+      <div
+        v-for="(item, index) in displayItems"
+        :key="item.url"
         class="media-item"
         :class="{ 'is-touched': touchedIndex === index }"
         @click="openLightbox(index)"
@@ -27,7 +49,7 @@
         <img v-else :src="item.thumbnail ?? item.url" :alt="item.alt || 'Media'" class="media-img" />
         <div class="media-overlay">
           <div v-if="item.type === 'video'" class="video-play-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
               <path d="M5 3l14 9-14 9V3z"/>
             </svg>
           </div>
@@ -35,133 +57,94 @@
       </div>
     </div>
 
-    <Teleport to="body">
-      <div v-if="isOpen" class="custom-lightbox" @click.self="closeLightbox">
-        <div class="lightbox-content">
-          <button class="lightbox-close" @click="closeLightbox" aria-label="Close">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-
-          <button 
-            v-if="displayItems.length > 1" 
-            class="lightbox-nav lightbox-prev" 
-            @click="prev" 
-            aria-label="Previous"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-
-          <div class="lightbox-media-container">
-            <img 
-              v-if="currentItem && currentItem.type !== 'video'" 
-              :src="currentItem.url" 
-              :alt="currentItem.alt"
-              class="lightbox-media"
-            />
-
-            <video 
-              v-else-if="currentItem && currentItem.type === 'video'"
-              :src="currentItem.url"
-              controls
-              autoplay
-              class="lightbox-media"
-            ></video>
-          </div>
-
-          <button 
-            v-if="displayItems.length > 1" 
-            class="lightbox-nav lightbox-next" 
-            @click="next" 
-            aria-label="Next"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-
-          <div class="lightbox-caption">
-            {{ currentItem?.alt }} ({{ selectedIndex + 1 }} / {{ displayItems.length }})
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <div v-if="hasMore" class="media-more">
+      <span class="media-more-hint">{{ allFilteredItems.length - MAX_DISPLAY }} more — open the lightbox to browse all</span>
+    </div>
   </section>
+
+  <MediaLightbox
+    v-model="lightboxOpen"
+    :items="allFilteredItems"
+    :start-index="lightboxStartIndex"
+  />
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+const MAX_DISPLAY = 16
 
 const props = defineProps({
-  title: {
-    type: String,
-    default: 'Media'
-  },
-  items: {
-    type: Array,
-    default: () => []
-  }
+  title: { type: String, default: 'Media' },
+  items: { type: Array, default: () => [] },
 })
 
 const touchedIndex = ref(null)
 const dynamicItems = ref([])
-const isOpen = ref(false)
-const selectedIndex = ref(0)
+const lightboxOpen = ref(false)
+const lightboxStartIndex = ref(0)
+const activeFilter = ref(null)
 
-const displayItems = computed(() => {
-  return props.items.length > 0 ? props.items : dynamicItems.value
+// Fetch media list if no items passed via props
+const { data: fetchedItems } = await useFetch('/api/media-list', { default: () => [] })
+
+const allItems = computed(() => {
+  const source = props.items.length > 0 ? props.items : (fetchedItems.value ?? dynamicItems.value)
+  // Exclude hero clips and webm thumbnails (items whose url contains -hero or whose type is video/webm thumbnail)
+  return source.filter(item =>
+    !item.url.includes('-hero') &&
+    !(item.url.endsWith('.webm') && source.some(s => s.thumbnail === item.url))
+  )
 })
 
-const currentItem = computed(() => displayItems.value[selectedIndex.value])
-
-onMounted(async () => {
-  if (props.items.length === 0) {
-    try {
-      const response = await fetch('/media-list.json')
-      if (response.ok) {
-        dynamicItems.value = await response.json()
-      }
-    } catch (e) {
-      console.error('Failed to load dynamic media', e)
+// Build date groups from item URLs (prefix YYYY-MM-DD)
+const dateGroups = computed(() => {
+  const seen = new Set()
+  const groups = []
+  for (const item of allItems.value) {
+    const match = item.url.match(/\/(\d{4}-\d{2}-\d{2})-/)
+    if (!match) continue
+    const date = match[1]
+    if (!seen.has(date)) {
+      seen.add(date)
+      const d = new Date(date)
+      const label = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+      groups.push({ date, label })
     }
   }
+  return groups.sort((a, b) => b.date.localeCompare(a.date))
 })
 
-function openLightbox(index) {
-  selectedIndex.value = index
-  isOpen.value = true
-  if (process.client) {
-    document.body.style.overflow = 'hidden'
+const hasOtherItems = computed(() =>
+  allItems.value.some(item => !item.url.match(/\/\d{4}-\d{2}-\d{2}-/))
+)
+
+const allFilteredItems = computed(() => {
+  if (!activeFilter.value) return allItems.value
+  if (activeFilter.value === '__other__') return allItems.value.filter(item => !item.url.match(/\/\d{4}-\d{2}-\d{2}-/))
+  return allItems.value.filter(item => item.url.includes(`/${activeFilter.value}-`))
+})
+
+// Randomised selection capped at MAX_DISPLAY for the grid
+const randomSeed = ref(Math.random())
+const displayItems = computed(() => {
+  const items = [...allFilteredItems.value]
+  // Seeded shuffle (Fisher-Yates with a simple seed)
+  let seed = Math.floor(randomSeed.value * 2147483647)
+  for (let i = items.length - 1; i > 0; i--) {
+    seed = (seed * 1664525 + 1013904223) & 0xffffffff
+    const j = Math.abs(seed) % (i + 1);
+    [items[i], items[j]] = [items[j], items[i]]
   }
-}
+  return items.slice(0, MAX_DISPLAY)
+})
 
-function closeLightbox() {
-  isOpen.value = false
-  if (process.client) {
-    document.body.style.overflow = ''
-  }
-}
+const hasMore = computed(() => allFilteredItems.value.length > MAX_DISPLAY)
 
-function next() {
-  selectedIndex.value = (selectedIndex.value + 1) % displayItems.value.length
-}
-
-function prev() {
-  selectedIndex.value = (selectedIndex.value - 1 + displayItems.value.length) % displayItems.value.length
-}
-
-// Keyboard navigation
-if (process.client) {
-  window.addEventListener('keydown', (e) => {
-    if (!isOpen.value) return
-    if (e.key === 'ArrowRight') next()
-    if (e.key === 'ArrowLeft') prev()
-    if (e.key === 'Escape') closeLightbox()
-  })
+function openLightbox(gridIndex) {
+  // Map grid index back to the full filtered list index
+  const clickedItem = displayItems.value[gridIndex]
+  const fullIndex = allFilteredItems.value.findIndex(i => i.url === clickedItem.url)
+  lightboxStartIndex.value = fullIndex >= 0 ? fullIndex : 0
+  lightboxOpen.value = true
 }
 </script>
 
@@ -187,6 +170,37 @@ if (process.client) {
   margin: 0 auto;
 }
 
+/* ── FILTER BAR ── */
+.media-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+.media-filter-btn {
+  background: none;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #6b7280;
+  font-family: var(--font-rock), cursive;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.media-filter-btn:hover,
+.media-filter-btn.active {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+/* ── GRID ── */
 .media-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -211,11 +225,14 @@ if (process.client) {
   position: relative;
   aspect-ratio: 1/1;
   overflow: hidden;
-  border: 2px solid var(--color-gold);
-  transition: all 0.3s ease;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  cursor: pointer;
+  transition: border-color 0.3s ease;
 }
 
-.media-item:hover, .media-item.is-touched {
+.media-item:hover,
+.media-item.is-touched {
+  border-color: var(--color-gold);
   box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
 }
 
@@ -227,7 +244,8 @@ if (process.client) {
   transition: all 0.5s ease;
 }
 
-.media-item:hover .media-img, .media-item.is-touched .media-img {
+.media-item:hover .media-img,
+.media-item.is-touched .media-img {
   filter: grayscale(0);
   transform: scale(1.1);
 }
@@ -243,7 +261,8 @@ if (process.client) {
   transition: all 0.3s ease;
 }
 
-.media-item:hover .media-overlay, .media-item.is-touched .media-overlay {
+.media-item:hover .media-overlay,
+.media-item.is-touched .media-overlay {
   background-color: rgba(212, 175, 55, 0.2);
   opacity: 1;
 }
@@ -259,100 +278,16 @@ if (process.client) {
   color: var(--color-black);
 }
 
-:deep(.media-item) {
-  cursor: pointer;
-}
-
-.custom-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background-color: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lightbox-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-.lightbox-close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 10001;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: color 0.3s;
-  padding: 0.5rem;
-}
-
-.lightbox-close:hover {
-  color: white;
-}
-
-.lightbox-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10001;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: color 0.3s;
-  padding: 1rem;
-}
-
-.lightbox-nav:hover {
-  color: white;
-}
-
-.lightbox-prev {
-  left: 1rem;
-}
-
-.lightbox-next {
-  right: 1rem;
-}
-
-.lightbox-media-container {
-  max-width: 90vw;
-  max-height: 90vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lightbox-media {
-  max-width: 100%;
-  max-height: 90vh;
-  object-fit: contain;
-}
-
-.lightbox-caption {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 0;
-  right: 0;
+/* ── MORE HINT ── */
+.media-more {
   text-align: center;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
+  margin-top: 1.5rem;
 }
 
-@media (max-width: 768px) {
-  .lightbox-nav svg {
-    width: 32px;
-    height: 32px;
-  }
+.media-more-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-style: italic;
+  letter-spacing: 0.05em;
 }
 </style>

@@ -1,5 +1,7 @@
 {
   "instruments": "Instruments",
+  "mediaFilterAll": "All",
+  "mediaFilterOther": "Other",
   "tickets": "Tickets",
   "location": "Location",
   "entranceFee": "Entrance fee",
