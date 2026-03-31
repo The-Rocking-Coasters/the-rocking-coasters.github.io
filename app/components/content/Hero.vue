@@ -1,17 +1,50 @@
 <template>
   <section id="hero" class="hero-section">
     <div class="hero-bg">
-      <img :src="backgroundImage" :alt="alt" class="hero-bg-img" />
+      <!-- Video background: cycles through curated hero clips -->
+      <template v-if="heroClips.length > 0">
+        <video
+          v-for="(clip, i) in heroClips"
+          :key="clip"
+          ref="videoEls"
+          class="hero-bg-video"
+          :class="{ active: i === clipIndex }"
+          autoplay
+          muted
+          playsinline
+          :style="i === clipIndex ? heroStyle : undefined"
+          @ended="nextClip"
+        >
+          <source :src="clip" type="video/webm" />
+        </video>
+      </template>
+      <!-- Static fallback (no hero clips yet, or video unsupported) -->
+      <img
+        v-else
+        :src="backgroundImage"
+        :alt="alt"
+        class="hero-bg-img"
+        :style="heroStyle"
+      />
       <div class="hero-overlay"></div>
     </div>
-    
+
     <div class="hero-content">
-      <img :src="logoImage" alt="The Rocking Coasters Logo" class="hero-logo" fetchpriority="high" loading="eager" width="1600" height="900" />
+      <img
+        :src="logoImage"
+        alt="The Rocking Coasters Logo"
+        class="hero-logo"
+        fetchpriority="high"
+        loading="eager"
+        width="1600"
+        height="900"
+      />
     </div>
 
     <div class="hero-scroll-indicator">
       <NuxtLink to="#agenda" class="scroll-link" aria-label="Scroll to agenda">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
         </svg>
       </NuxtLink>
@@ -20,19 +53,44 @@
 </template>
 
 <script setup>
+import { HERO_VISUAL } from '../../../hero.config'
+
 defineProps({
-  backgroundImage: {
-    type: String,
-    default: '/images/band.webp'
-  },
-  logoImage: {
-    type: String,
-    default: '/images/logo.svg'
-  },
-  alt: {
-    type: String,
-    default: 'The Rocking Coasters Band'
-  }
+  backgroundImage: { type: String, default: '/images/band.webp' },
+  logoImage:       { type: String, default: '/images/logo.svg' },
+  alt:             { type: String, default: 'The Rocking Coasters Band' },
+})
+
+const { data: mediaList } = await useFetch('/api/media-list', { default: () => [] })
+
+const heroClips = computed(() =>
+  (mediaList.value ?? []).filter(i => i.heroClip).map(i => i.heroClip)
+)
+
+const clipIndex = ref(0)
+const videoEls = ref([])
+
+const heroStyle = computed(() => ({
+  opacity: HERO_VISUAL.opacity,
+  filter: HERO_VISUAL.grayscale > 0 ? `grayscale(${HERO_VISUAL.grayscale})` : undefined,
+}))
+
+const nextClip = () => {
+  clipIndex.value = (clipIndex.value + 1) % (heroClips.value.length || 1)
+}
+
+watch(clipIndex, (newIdx) => {
+  nextTick(() => {
+    videoEls.value.forEach((el, i) => {
+      if (!el) return
+      if (i === newIdx) {
+        el.currentTime = 0
+        el.play().catch(() => {})
+      } else {
+        el.pause()
+      }
+    })
+  })
 })
 </script>
 
@@ -59,8 +117,21 @@ defineProps({
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1);
-  opacity: 0.5;
+}
+
+.hero-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+
+.hero-bg-video.active {
+  opacity: 1;
 }
 
 .hero-overlay {
@@ -89,10 +160,10 @@ defineProps({
 
 @media (max-width: 768px) {
   .hero-logo {
-    max-width: 180%; /* Allow golden border to overflow for maximum text width */
+    max-width: 180%;
     width: 120%;
     max-height: 50vh;
-    transform: scale(1.8); /* Ensure the logo feels prominent */
+    transform: scale(1.8);
   }
 }
 
@@ -110,8 +181,8 @@ defineProps({
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {transform: translateX(-50%) translateY(0);}
-  40% {transform: translateX(-50%) translateY(-30px);}
-  60% {transform: translateX(-50%) translateY(-15px);}
+  0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+  40% { transform: translateX(-50%) translateY(-30px); }
+  60% { transform: translateX(-50%) translateY(-15px); }
 }
 </style>

@@ -117,12 +117,23 @@
 
             <div class="agenda-actions-col">
               <span class="played-badge">✓ Played</span>
+              <button
+                v-if="getMediaForDate(event.date).length > 0"
+                class="retro-button small secondary media-btn"
+                @click="openLightbox(event.date)"
+              >{{ $t('viewMedia') }}</button>
             </div>
           </div>
         </div>
       </Transition>
     </div>
   </section>
+
+  <MediaLightbox
+    v-model="lightboxOpen"
+    :items="lightboxItems"
+    :start-index="0"
+  />
 </template>
 
 <script setup>
@@ -140,9 +151,25 @@ const { data: performances } = await useAsyncData('performances', () => {
   return queryCollection('performances').all()
 })
 
+const { data: mediaList } = await useFetch('/api/media-list', {
+  default: () => [],
+})
+
 const allSortedPerformances = ref([])
 const showMaps = ref({})
 const showPastShows = ref(false)
+const lightboxOpen = ref(false)
+const lightboxItems = ref([])
+
+const getMediaForDate = (date) => {
+  if (!mediaList.value) return []
+  return mediaList.value.filter(item => item.url.includes(`/images/media/${date}-`))
+}
+
+const openLightbox = (date) => {
+  lightboxItems.value = getMediaForDate(date)
+  lightboxOpen.value = true
+}
 
 const toggleMap = (key) => {
   showMaps.value[key] = !showMaps.value[key]
@@ -532,6 +559,9 @@ const formatDate = (dateStr, part) => {
 
   .played-badge {
     margin: 0 auto;
+  }
+  .media-btn {
+    margin-top: 0.5rem;
   }
 }
 </style>

@@ -8,6 +8,12 @@
   "showPastShows": "🎸 Dig Through The Crates ({count})",
   "hidePastShows": "🎸 Put 'Em Back",
   "free": "Free!",
+  "viewMedia": "📷 Photos & Videos",
+  "lightbox": {
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next"
+  },
   "contact": {
     "name": "Name",
     "email": "Email",

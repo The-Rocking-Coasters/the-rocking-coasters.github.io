@@ -1,6 +1,5 @@
-import { readdirSync, existsSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
-import { execSync } from 'child_process'
+import { processMedia } from './scripts/media'
 
 // noinspection JSUnusedGlobalSymbols
 export default defineNuxtConfig({
@@ -23,66 +22,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
   hooks: {
     'build:before': (): void => {
-      type MediaItem = {
-          url: string
-          alt: string
-          type: string
-          thumbnail?: string
-          thumbnailType?: string
-      };
-      const mediaDir = resolve(__dirname, 'public/images/media')
-      const outputJson = resolve(__dirname, 'public/media-list.json')
-
-      if (existsSync(mediaDir)) {
-        const files: string[] = readdirSync(mediaDir)
-        const mediaItems : MediaItem[] = files
-          .filter((file: string) => {
-            if (!/\.(jpg|jpeg|png|webp|mp4|webm|ogg)$/i.test(file)) return false
-            // Exclude WebM files that are thumbnails for a video (same base name as an mp4/ogg)
-            if (/\.webm$/i.test(file)) {
-              const baseName = file.split('.').slice(0, -1).join('.')
-              const hasSourceVideo = files.some(f => new RegExp(`^${baseName}\\.(mp4|ogg)$`, 'i').test(f))
-              if (hasSourceVideo) return false
-            }
-            return true
-          })
-          .map((file: string) => {
-            const isVideo = /\.(mp4|webm|ogg)$/i.test(file)
-            const item: MediaItem = {
-              url: `/images/media/${file}`,
-              alt: file.split('.').slice(0, -1).join('.').replace(/[_-]/g, ' '),
-              type: isVideo ? 'video' : 'image'
-            }
-            if (isVideo) {
-              const baseName = file.split('.').slice(0, -1).join('.')
-              const gifName = `${baseName}.webm`
-              const gifPath = resolve(mediaDir, gifName)
-              if (!existsSync(gifPath)) {
-                try {
-                  const videoPath = resolve(mediaDir, file)
-                  const filters = 'fps=24,scale=480:-1:flags=lanczos'
-                  execSync(
-                    `ffmpeg -y -t 4 -i "${videoPath}" -vf "${filters}" -c:v libvpx-vp9 -b:v 0 -crf 40 -an "${gifPath}"`,
-                    { stdio: 'pipe' }
-                  )
-                  console.log(`[Media Plugin] Generated WebM thumbnail: ${gifName}`)
-                } catch (e) {
-                  console.warn(`[Media Plugin] Could not generate GIF for ${file} (ffmpeg not available?)`)
-                }
-              }
-              if (existsSync(gifPath)) {
-                item.thumbnail = `/images/media/${gifName}`
-                item.thumbnailType = 'video/webm'
-              }
-            }
-            return item
-          })
-
-        writeFileSync(outputJson, JSON.stringify(mediaItems, null, 2))
-        console.log(`[Media Plugin] Generated media-list.json with ${mediaItems.length} items.`)
-      } else {
-        console.warn(`[Media Plugin] Media directory not found: ${mediaDir}`)
-      }
+      processMedia(resolve(__dirname, '..'))
     }
   },
   site: {
@@ -149,6 +89,8 @@ export default defineNuxtConfig({
     head: {
       link: [
         { rel: 'icon', type: 'image/webp', href: '/favicon.webp' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'apple-touch-icon-precomposed', href: '/apple-touch-icon-precomposed.png' },
         { rel: 'preload', as: 'image', href: '/images/logo.svg', fetchpriority: 'high' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },

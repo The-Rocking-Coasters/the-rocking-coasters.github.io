@@ -8,6 +8,12 @@
   "showPastShows": "🎸 Graaf Door Het Archief ({count})",
   "hidePastShows": "🎸 Sluit Het Archief",
   "free": "Gratis!",
+  "viewMedia": "📷 Foto's & Video's",
+  "lightbox": {
+    "close": "Sluiten",
+    "prev": "Vorige",
+    "next": "Volgende"
+  },
   "contact": {
     "name": "Naam",
     "email": "E-mail",
