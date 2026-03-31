@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
   hooks: {
     'build:before': (): void => {
-      generateMediaList(resolve(__dirname, '..'))
+      generateMediaList(__dirname)
     }
   },
   site: {

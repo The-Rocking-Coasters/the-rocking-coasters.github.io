@@ -51,8 +51,8 @@ const DATE_OVERRIDES: Record<string, string> = {
  * Run this locally whenever new media is added to original_content.
  */
 export function convertMedia(rootDir: string): void {
-  const originalDir = resolve(rootDir, 'original_content')
-  const mediaDir = resolve(rootDir, 'website/public/images/media')
+  const originalDir = resolve(rootDir, '../original_content')
+  const mediaDir = resolve(rootDir, 'public/images/media')
 
   if (!existsSync(originalDir)) {
     console.warn(`[Media] original_content directory not found: ${originalDir}`)
@@ -126,8 +126,8 @@ export function convertMedia(rootDir: string): void {
  * Called automatically during build.
  */
 export function generateMediaList(rootDir: string): void {
-  const mediaDir = resolve(rootDir, 'website/public/images/media')
-  const outputJson = resolve(rootDir, 'website/public/media-list.json')
+  const mediaDir = resolve(rootDir, 'public/images/media')
+  const outputJson = resolve(rootDir, 'public/media-list.json')
 
   if (!existsSync(mediaDir)) {
     console.warn(`[Media] Media directory not found: ${mediaDir}`)
