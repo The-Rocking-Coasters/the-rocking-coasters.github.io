@@ -6,7 +6,8 @@ export default defineNuxtConfig({
   ssr: true,
   nitro: {
     prerender: {
-      autoSubfolderIndex: true
+      autoSubfolderIndex: true,
+      routes: ['/api/media-list']
     }
   },
   $production: {
