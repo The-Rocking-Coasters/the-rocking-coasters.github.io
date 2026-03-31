@@ -47,85 +47,87 @@ const DATE_OVERRIDES: Record<string, string> = {
 
 /**
  * Converts original_content media files to public/images/media with web-optimised
- * quality and date-based filenames, then generates public/media-list.json.
+ * quality and date-based filenames.
+ * Run this locally whenever new media is added to original_content.
  */
-export function processMedia(rootDir: string): void {
+export function convertMedia(rootDir: string): void {
   const originalDir = resolve(rootDir, 'original_content')
   const mediaDir = resolve(rootDir, 'website/public/images/media')
-  const outputJson = resolve(rootDir, 'website/public/media-list.json')
 
-  // ── 1. Convert original_content → public/images/media ──────────────────────
-
-  if (existsSync(originalDir)) {
-    if (!existsSync(mediaDir)) mkdirSync(mediaDir, { recursive: true })
-
-    const origFiles = readdirSync(originalDir).filter(f =>
-      /\.(jpe?g|png|webp|mp4|mov|webm|ogg)$/i.test(f)
-    )
-
-    // Group by date so we can assign a stable 1-based index per date
-    type ParsedFile = { filename: string; date: string; time: string; counter: number }
-    const parsed: ParsedFile[] = []
-
-    for (const filename of origFiles) {
-      const info = parseWhatsAppFilename(filename)
-      if (!info) {
-        console.warn(`[Media] Skipping unrecognised filename: ${filename}`)
-        continue
-      }
-      parsed.push({ filename, ...info })
-    }
-
-    // Sort by date → time → counter so indices are deterministic
-    parsed.sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date)
-      if (a.time !== b.time) return a.time.localeCompare(b.time)
-      return a.counter - b.counter
-    })
-
-    // Assign per-date index (applying date overrides for capture-date correction)
-    const dateCounters: Record<string, number> = {}
-    for (const item of parsed) {
-      const outputDate = DATE_OVERRIDES[item.date] ?? item.date
-      dateCounters[outputDate] = (dateCounters[outputDate] ?? 0) + 1
-      const idx = dateCounters[outputDate]
-      const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(item.filename)
-      const outExt = isVideo ? 'mp4' : 'jpg'
-      const outName = `${outputDate}-${idx}.${outExt}`
-      const srcPath = resolve(originalDir, item.filename)
-      const dstPath = resolve(mediaDir, outName)
-
-      if (existsSync(dstPath)) {
-        console.log(`[Media] Already converted, skipping: ${outName}`)
-        continue
-      }
-
-      try {
-        if (isVideo) {
-          // Re-encode to H.264 MP4, scale to max 1280px wide, CRF 28 (high quality, streamable)
-          execSync(
-            `ffmpeg -y -i "${srcPath}" -vf "scale='min(1280,iw)':-2:flags=lanczos" ` +
-            `-c:v libx264 -crf 28 -preset medium -movflags +faststart -c:a aac -b:a 96k "${dstPath}"`,
-            { stdio: 'pipe' }
-          )
-        } else {
-          // Convert to JPEG, quality 85 (high quality, good web size)
-          execSync(
-            `ffmpeg -y -i "${srcPath}" -vf "scale='min(1920,iw)':-2:flags=lanczos" ` +
-            `-q:v 4 "${dstPath}"`,
-            { stdio: 'pipe' }
-          )
-        }
-        console.log(`[Media] Converted: ${item.filename} → ${outName}`)
-      } catch (e) {
-        console.warn(`[Media] Failed to convert ${item.filename}: ${(e as Error).message}`)
-      }
-    }
-  } else {
+  if (!existsSync(originalDir)) {
     console.warn(`[Media] original_content directory not found: ${originalDir}`)
+    return
   }
 
-  // ── 2. Generate media-list.json from public/images/media ───────────────────
+  if (!existsSync(mediaDir)) mkdirSync(mediaDir, { recursive: true })
+
+  const origFiles = readdirSync(originalDir).filter(f =>
+    /\.(jpe?g|png|webp|mp4|mov|webm|ogg)$/i.test(f)
+  )
+
+  type ParsedFile = { filename: string; date: string; time: string; counter: number }
+  const parsed: ParsedFile[] = []
+
+  for (const filename of origFiles) {
+    const info = parseWhatsAppFilename(filename)
+    if (!info) {
+      console.warn(`[Media] Skipping unrecognised filename: ${filename}`)
+      continue
+    }
+    parsed.push({ filename, ...info })
+  }
+
+  parsed.sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date)
+    if (a.time !== b.time) return a.time.localeCompare(b.time)
+    return a.counter - b.counter
+  })
+
+  const dateCounters: Record<string, number> = {}
+  for (const item of parsed) {
+    const outputDate = DATE_OVERRIDES[item.date] ?? item.date
+    dateCounters[outputDate] = (dateCounters[outputDate] ?? 0) + 1
+    const idx = dateCounters[outputDate]
+    const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(item.filename)
+    const outExt = isVideo ? 'mp4' : 'jpg'
+    const outName = `${outputDate}-${idx}.${outExt}`
+    const srcPath = resolve(originalDir, item.filename)
+    const dstPath = resolve(mediaDir, outName)
+
+    if (existsSync(dstPath)) {
+      console.log(`[Media] Already converted, skipping: ${outName}`)
+      continue
+    }
+
+    try {
+      if (isVideo) {
+        execSync(
+          `ffmpeg -y -i "${srcPath}" -vf "scale='min(1280,iw)':-2:flags=lanczos" ` +
+          `-c:v libx264 -crf 28 -preset medium -movflags +faststart -c:a aac -b:a 96k "${dstPath}"`,
+          { stdio: 'pipe' }
+        )
+      } else {
+        execSync(
+          `ffmpeg -y -i "${srcPath}" -vf "scale='min(1920,iw)':-2:flags=lanczos" ` +
+          `-q:v 4 "${dstPath}"`,
+          { stdio: 'pipe' }
+        )
+      }
+      console.log(`[Media] Converted: ${item.filename} → ${outName}`)
+    } catch (e) {
+      console.warn(`[Media] Failed to convert ${item.filename}: ${(e as Error).message}`)
+    }
+  }
+}
+
+/**
+ * Generates public/media-list.json from whatever media files are already present
+ * in public/images/media. Also generates WebM thumbnails and hero clips as needed.
+ * Called automatically during build.
+ */
+export function generateMediaList(rootDir: string): void {
+  const mediaDir = resolve(rootDir, 'website/public/images/media')
+  const outputJson = resolve(rootDir, 'website/public/media-list.json')
 
   if (!existsSync(mediaDir)) {
     console.warn(`[Media] Media directory not found: ${mediaDir}`)
@@ -207,4 +209,13 @@ export function processMedia(rootDir: string): void {
 
   writeFileSync(outputJson, JSON.stringify(mediaItems, null, 2))
   console.log(`[Media] Generated media-list.json with ${mediaItems.length} items.`)
+}
+
+/**
+ * Convenience function: convert new media from original_content, then regenerate
+ * the media list. Run locally after adding new files to original_content.
+ */
+export function processMedia(rootDir: string): void {
+  convertMedia(rootDir)
+  generateMediaList(rootDir)
 }

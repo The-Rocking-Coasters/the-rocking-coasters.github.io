@@ -1,5 +1,5 @@
 import { resolve } from 'path'
-import { processMedia } from './scripts/media'
+import { generateMediaList } from './scripts/media'
 
 // noinspection JSUnusedGlobalSymbols
 export default defineNuxtConfig({
@@ -23,7 +23,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
   hooks: {
     'build:before': (): void => {
-      processMedia(resolve(__dirname, '..'))
+      generateMediaList(resolve(__dirname, '..'))
     }
   },
   site: {
