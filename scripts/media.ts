@@ -90,7 +90,7 @@ export function convertMedia(rootDir: string): void {
     dateCounters[outputDate] = (dateCounters[outputDate] ?? 0) + 1
     const idx = dateCounters[outputDate]
     const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(item.filename)
-    const outExt = isVideo ? 'mp4' : 'jpg'
+    const outExt = isVideo ? 'mp4' : 'webp'
     const outName = `${outputDate}-${idx}.${outExt}`
     const srcPath = resolve(originalDir, item.filename)
     const dstPath = resolve(mediaDir, outName)
@@ -109,8 +109,7 @@ export function convertMedia(rootDir: string): void {
         )
       } else {
         execSync(
-          `ffmpeg -y -i "${srcPath}" -vf "scale='min(1920,iw)':-2:flags=lanczos" ` +
-          `-q:v 4 "${dstPath}"`,
+          `magick "${srcPath}" -resize '800x800>' -quality 80 "${dstPath}"`,
           { stdio: 'pipe' }
         )
       }
