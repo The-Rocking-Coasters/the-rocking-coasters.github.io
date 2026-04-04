@@ -124,7 +124,9 @@ const allFilteredItems = computed(() => {
 })
 
 // Randomised selection capped at MAX_DISPLAY for the grid
-const randomSeed = ref(Math.random())
+// Use a fixed seed for SSR, then re-randomize after hydration
+const randomSeed = ref(0.42)
+onMounted(() => { randomSeed.value = Math.random() })
 const displayItems = computed(() => {
   const items = [...allFilteredItems.value]
   // Seeded shuffle (Fisher-Yates with a simple seed)
