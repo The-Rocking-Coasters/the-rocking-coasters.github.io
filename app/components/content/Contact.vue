@@ -330,7 +330,7 @@ const getIcon = (name) => {
   border-top: 1px solid rgba(212, 175, 55, 0.2);
   padding-top: 2.5rem;
   font-family: var(--font-rock), cursive;
-  color: #6b7280;
+  color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }

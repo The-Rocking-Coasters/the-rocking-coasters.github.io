@@ -390,7 +390,7 @@ const formatDate = (dateStr, part) => {
 }
 
 .gig-meta-sep {
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 0.7rem;
 }
 

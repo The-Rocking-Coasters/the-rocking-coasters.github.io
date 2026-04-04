@@ -183,7 +183,7 @@ function openLightbox(gridIndex) {
 .media-filter-btn {
   background: none;
   border: 1px solid rgba(212, 175, 55, 0.25);
-  color: #6b7280;
+  color: #9ca3af;
   font-family: var(--font-rock), cursive;
   font-size: 0.8rem;
   letter-spacing: 0.1em;
@@ -286,7 +286,7 @@ function openLightbox(gridIndex) {
 
 .media-more-hint {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #9ca3af;
   font-style: italic;
   letter-spacing: 0.05em;
 }
