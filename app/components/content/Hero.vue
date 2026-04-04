@@ -9,9 +9,10 @@
           ref="videoEls"
           class="hero-bg-video"
           :class="{ active: i === clipIndex }"
-          autoplay
+          :autoplay="i === 0"
           muted
           playsinline
+          :preload="i === 0 ? 'auto' : 'none'"
           :style="i === clipIndex ? heroStyle : undefined"
           @ended="nextClip"
         >
@@ -37,8 +38,6 @@
         class="hero-logo"
         fetchpriority="high"
         loading="eager"
-        width="1600"
-        height="900"
       />
     </div>
 
@@ -167,6 +166,7 @@ watch(clipIndex, (newIdx) => {
     width: 120%;
     max-height: 50vh;
     transform: scale(1.8);
+    filter: none;
   }
 }
 
