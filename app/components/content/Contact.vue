@@ -12,7 +12,7 @@
         <div class="info-list">
           <div v-for="(info, index) in contactInfo" :key="index" class="info-item">
             <span class="info-icon">
-               <component :is="getIcon(info.icon)" size="24" />
+               <ClientOnly><component :is="getIcon(info.icon)" :size="24" /></ClientOnly>
             </span>
             <span class="info-value">{{ info.value }}</span>
           </div>
@@ -20,7 +20,7 @@
 
         <div class="social-links">
           <a v-for="(social, index) in socials" :key="index" :href="social.link" target="_blank" class="social-link" :aria-label="social.icon">
-            <component :is="getIcon(social.icon)" size="32" />
+            <ClientOnly><component :is="getIcon(social.icon)" :size="32" /></ClientOnly>
           </a>
         </div>
       </div>
@@ -29,23 +29,23 @@
         <h3 class="reasons-title">{{ $t('contact.whyUs') }}</h3>
         <ul class="reasons-list">
           <li class="reason-item">
-            <span class="reason-icon">🎸</span>
+            <span class="reason-icon"><Guitar :size="20" /></span>
             <span>{{ $t('contact.reason1') }}</span>
           </li>
           <li class="reason-item">
-            <span class="reason-icon">🎤</span>
+            <span class="reason-icon"><Mic :size="20" /></span>
             <span>{{ $t('contact.reason2') }}</span>
           </li>
           <li class="reason-item">
-            <span class="reason-icon">🕺</span>
+            <span class="reason-icon"><PersonStanding :size="20" /></span>
             <span>{{ $t('contact.reason3') }}</span>
           </li>
           <li class="reason-item">
-            <span class="reason-icon">🎶</span>
+            <span class="reason-icon"><Music :size="20" /></span>
             <span>{{ $t('contact.reason4') }}</span>
           </li>
           <li class="reason-item">
-            <span class="reason-icon">⭐</span>
+            <span class="reason-icon"><Star :size="20" /></span>
             <span>{{ $t('contact.reason5') }}</span>
           </li>
         </ul>
@@ -74,7 +74,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Mail, Phone, MapPin, Instagram, Facebook, Youtube } from 'lucide-vue-next';
+import { Mail, Phone, MapPin, Instagram, Facebook, Youtube, Guitar, Mic, PersonStanding, Music, Star } from 'lucide-vue-next';
 
 defineProps({
   title: {
@@ -123,7 +123,7 @@ const totalShows = computed(() => {
 });
 
 const getIcon = (name) => {
-  const icons = { Mail, Phone, MapPin, Instagram, Facebook, Youtube };
+  const icons = { Mail, Phone, MapPin, Instagram, Facebook, Youtube, YouTube: Youtube };
   return icons[name] || Mail;
 }
 
@@ -290,7 +290,10 @@ const getIcon = (name) => {
 }
 
 .reason-icon {
-  font-size: 1.25rem;
+  color: var(--color-gold);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .stat-row {

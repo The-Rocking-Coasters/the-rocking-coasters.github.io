@@ -1,13 +1,5 @@
 <script setup lang="ts">
 const { locale, locales, setLocale } = useI18n()
-
-const getFlag = (code: string) => {
-  switch (code) {
-    case 'en': return '🇬🇧'
-    case 'nl': return '🇳🇱'
-    default: return code
-  }
-}
 </script>
 
 <template>
@@ -19,8 +11,8 @@ const getFlag = (code: string) => {
       :class="{ active: locale === loc.code }"
       :title="loc.name"
     >
-      <span class="flag">{{ getFlag(loc.code) }}</span>
-      <span class="label">{{ loc.name }}</span>
+      <span class="label-full">{{ loc.name }}</span>
+      <span class="label-short">{{ loc.code.toUpperCase() }}</span>
     </button>
   </div>
 </template>
@@ -41,9 +33,10 @@ button {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-rock), cursive;
   font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   transition: all 0.3s ease;
   opacity: 0.7;
 }
@@ -59,20 +52,22 @@ button.active {
   opacity: 1;
 }
 
-.flag {
-  font-size: 1.1rem;
+.label-short {
+  display: none;
 }
 
 @media (max-width: 768px) {
-  .label {
+  .label-full {
     display: none;
   }
-  button {
-    padding: 0.25rem 0.4rem;
-    gap: 0;
+
+  .label-short {
+    display: inline;
+    font-size: 0.75rem;
   }
-  .flag {
-    font-size: 1rem;
+
+  button {
+    padding: 0.25rem 0.45rem;
   }
 }
 </style>

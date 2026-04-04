@@ -10,6 +10,7 @@ type MediaItem = {
   thumbnail?: string
   thumbnailType?: string
   heroClip?: string
+  heroClipMp4?: string
 }
 
 /**
@@ -138,13 +139,13 @@ export function generateMediaList(rootDir: string): void {
   const mediaItems: MediaItem[] = files
     .filter((file: string) => {
       if (!/\.(jpg|jpeg|png|webp|mp4|webm|ogg)$/i.test(file)) return false
+      // Exclude hero clips from the gallery (any format)
+      if (file.includes('-hero')) return false
       if (/\.webm$/i.test(file)) {
         const baseName = file.split('.').slice(0, -1).join('.')
         // Exclude WebM thumbnails (same base name as an mp4/ogg)
         const hasSourceVideo = files.some(f => new RegExp(`^${baseName}\\.(mp4|ogg)$`, 'i').test(f))
         if (hasSourceVideo) return false
-        // Exclude hero clip WebMs
-        if (file.includes('-hero')) return false
       }
       return true
     })
@@ -200,6 +201,26 @@ export function generateMediaList(rootDir: string): void {
           }
           if (existsSync(heroPath)) {
             item.heroClip = `/images/media/${heroName}`
+          }
+
+          // MP4 fallback for Safari/iOS
+          const heroNameMp4 = `${baseName}-hero.mp4`
+          const heroPathMp4 = resolve(mediaDir, heroNameMp4)
+          if (!existsSync(heroPathMp4)) {
+            try {
+              const videoPath = resolve(mediaDir, file)
+              execSync(
+                `ffmpeg -y -ss ${heroConfig.start} -t ${heroConfig.duration} -i "${videoPath}" ` +
+                `-vf "scale=1280:-2:flags=lanczos" -c:v libx264 -preset fast -crf 23 -an "${heroPathMp4}"`,
+                { stdio: 'pipe' }
+              )
+              console.log(`[Media] Generated hero clip (mp4): ${heroNameMp4}`)
+            } catch (e) {
+              console.warn(`[Media] Could not generate hero clip mp4 for ${file}: ${(e as Error).message}`)
+            }
+          }
+          if (existsSync(heroPathMp4)) {
+            item.heroClipMp4 = `/images/media/${heroNameMp4}`
           }
         }
       }

@@ -2,7 +2,9 @@
   <nav class="creative-nav" :class="{ 'nav-hidden': !showNav }">
     <div class="nav-container">
       <NuxtLink v-for="link in links" :key="link.href" :to="link.href" class="nav-link group">
-        <component :is="link.icon" size="20" />
+        <ClientOnly>
+          <component :is="link.icon" :size="20" />
+        </ClientOnly>
         <span class="nav-tooltip">{{ link.label }}</span>
       </NuxtLink>
     </div>

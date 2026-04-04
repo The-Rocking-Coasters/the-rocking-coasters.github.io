@@ -5,7 +5,7 @@
       <template v-if="heroClips.length > 0">
         <video
           v-for="(clip, i) in heroClips"
-          :key="clip"
+          :key="clip.webm || clip.mp4"
           ref="videoEls"
           class="hero-bg-video"
           :class="{ active: i === clipIndex }"
@@ -15,7 +15,8 @@
           :style="i === clipIndex ? heroStyle : undefined"
           @ended="nextClip"
         >
-          <source :src="clip" type="video/webm" />
+          <source v-if="clip.webm" :src="clip.webm" type="video/webm" />
+          <source v-if="clip.mp4" :src="clip.mp4" type="video/mp4" />
         </video>
       </template>
       <!-- Static fallback (no hero clips yet, or video unsupported) -->
@@ -64,7 +65,9 @@ defineProps({
 const { data: mediaList } = await useFetch('/api/media-list', { default: () => [] })
 
 const heroClips = computed(() =>
-  (mediaList.value ?? []).filter(i => i.heroClip).map(i => i.heroClip)
+  (mediaList.value ?? [])
+    .filter(i => i.heroClip || i.heroClipMp4)
+    .map(i => ({ webm: i.heroClip, mp4: i.heroClipMp4 }))
 )
 
 const clipIndex = ref(0)

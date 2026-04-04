@@ -2,10 +2,10 @@
   <Teleport to="body">
     <Transition name="lightbox-fade">
       <div v-if="modelValue" class="lightbox-overlay" @click.self="close" @keydown.esc="close" tabindex="-1" ref="overlayRef">
-        <button class="lightbox-close" @click="close" :aria-label="$t('lightbox.close')">✕</button>
+        <button class="lightbox-close" @click="close" :aria-label="$t('lightbox.close')"><X :size="28" /></button>
 
-        <button v-if="items.length > 1" class="lightbox-nav lightbox-prev" @click="prev" :aria-label="$t('lightbox.prev')">‹</button>
-        <button v-if="items.length > 1" class="lightbox-nav lightbox-next" @click="next" :aria-label="$t('lightbox.next')">›</button>
+        <button v-if="items.length > 1" class="lightbox-nav lightbox-prev" @click="prev" :aria-label="$t('lightbox.prev')"><ChevronLeft :size="36" /></button>
+        <button v-if="items.length > 1" class="lightbox-nav lightbox-next" @click="next" :aria-label="$t('lightbox.next')"><ChevronRight :size="36" /></button>
 
         <div class="lightbox-content">
           <template v-if="current">
@@ -44,7 +44,7 @@
               <source :src="item.thumbnail" :type="item.thumbnailType || 'video/webm'" />
             </video>
             <img v-else-if="item.type === 'image'" class="lightbox-thumb" :src="item.url" :alt="item.alt" />
-            <div v-else class="lightbox-thumb lightbox-thumb-video-placeholder">▶</div>
+            <div v-else class="lightbox-thumb lightbox-thumb-video-placeholder"><Play :size="20" /></div>
           </button>
         </div>
       </div>
@@ -53,6 +53,8 @@
 </template>
 
 <script setup>
+import { X, ChevronLeft, ChevronRight, Play } from 'lucide-vue-next'
+
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   items: { type: Array, default: () => [] },
@@ -128,12 +130,13 @@ const next = () => {
   background: none;
   border: none;
   color: #fff;
-  font-size: 2rem;
   cursor: pointer;
-  line-height: 1;
   opacity: 0.8;
   transition: opacity 0.2s;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
 }
 .lightbox-close:hover { opacity: 1; }
 
@@ -144,13 +147,13 @@ const next = () => {
   background: rgba(255,255,255,0.1);
   border: none;
   color: #fff;
-  font-size: 3rem;
-  line-height: 1;
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem;
   cursor: pointer;
   border-radius: 4px;
   transition: background 0.2s;
   z-index: 1;
+  display: flex;
+  align-items: center;
 }
 .lightbox-nav:hover { background: rgba(255,255,255,0.25); }
 .lightbox-prev { left: 0.5rem; }

@@ -7,10 +7,10 @@
   "entranceFee": "Entrance fee",
   "toggleMap": "Show/hide map",
   "pastShows": "Past Shows",
-  "showPastShows": "🎸 Dig Through The Crates ({count})",
-  "hidePastShows": "🎸 Put 'Em Back",
+  "showPastShows": "Dig Through The Crates ({count})",
+  "hidePastShows": "Put 'Em Back",
   "free": "Free!",
-  "viewMedia": "📷 Photos & Videos",
+  "viewMedia": "Photos & Videos",
   "lightbox": {
     "close": "Close",
     "prev": "Previous",

@@ -32,9 +32,9 @@ socials:
   - icon: Facebook
     link: https://facebook.com/therockingcoasters
   - icon: Instagram
-    link: https://instagram.com/rockingcoasters
+    link: https://instagram.com/therockingcoasters
   - icon: YouTube
-    link: https://youtube.com/rockingcoasters
+    link: https://www.youtube.com/@therockingcoastersoss
 subtitle: Book the Rocking Coasters for your next event
 title: Get in Touch
 ---
