@@ -16,9 +16,7 @@
     "nuxt": "^4.4.2"
   },
   "devDependencies": {
-    "nuxt-studio": "^1.4.0",
-    "lucide-vue-next": "^0.577.0",
-    "nuxt-component-meta": "^0.17.2"
+    "lucide-vue-next": "^0.577.0"
   },
   "overrides": {
     "serialize-javascript": "^7.0.3",

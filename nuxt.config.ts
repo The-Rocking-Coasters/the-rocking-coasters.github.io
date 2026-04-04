@@ -10,9 +10,6 @@ export default defineNuxtConfig({
       routes: ['/api/media-list']
     }
   },
-  $production: {
-    studio: false
-  },
   future: {
     compatibilityVersion: 4,
   },
@@ -20,7 +17,7 @@ export default defineNuxtConfig({
     // @ts-ignore - inlineStyles is valid in Nuxt 4 but may not be typed in the current version
     inlineStyles: true,
   },
-  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/i18n', "@nuxtjs/seo"],
+  modules: ['@nuxt/content', '@nuxtjs/i18n', "@nuxtjs/seo"],
   hooks: {
     'build:before': (): void => {
       generateMediaList(__dirname)
@@ -71,14 +68,6 @@ export default defineNuxtConfig({
   },
   sitemap: {
     enabled: true,
-  },
-  studio: {
-    repository: {
-      provider: 'github',
-      owner: 'd2af5',
-      repo: 'website',
-      branch: 'main',
-    }
   },
   routeRules: {
     '/': { prerender: true },
