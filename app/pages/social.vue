@@ -155,10 +155,11 @@ const formattedDate = computed(() => {
 })
 
 // ── Toolbar state ──
+const DEFAULT_BG = '/images/media/2026-03-29-4.webp'
 const toolbarOpen = ref(false)
 const perfDropdownOpen = ref(false)
 const bgOpacity = ref(HERO_VISUAL.opacity)
-const bgImage = ref('/images/media/2026-03-29-4.webp')
+const bgImage = ref(DEFAULT_BG)
 const showMediaPicker = ref(false)
 const exporting = ref(false)
 const cardRef = ref<HTMLElement | null>(null)
@@ -276,6 +277,9 @@ function resetPositions() {
   logoScale.value = 1.2
   datePos.x = 0; datePos.y = 0
   venuePos.x = 0; venuePos.y = 0
+  bgOpacity.value = HERO_VISUAL.opacity
+  if (bgImage.value.startsWith('blob:')) URL.revokeObjectURL(bgImage.value)
+  bgImage.value = DEFAULT_BG
 }
 
 // ── Frame scrubber state ──
@@ -325,7 +329,13 @@ function seekFrameScrubber(time: number) {
 function confirmFrame() {
   const canvas = frameScrubberCanvas.value
   if (!canvas) return
-  bgImage.value = canvas.toDataURL('image/png')
+  // Store as blob URL for display (efficient), keep canvas data for export
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    // Revoke previous blob URL if any
+    if (bgImage.value.startsWith('blob:')) URL.revokeObjectURL(bgImage.value)
+    bgImage.value = URL.createObjectURL(blob)
+  }, 'image/jpeg', 0.92)
   frameScrubberVideo.value = null
   showMediaPicker.value = false
 }
