@@ -352,24 +352,44 @@ async function imgToDataUrl(src: string): Promise<string> {
   })
 }
 
+function waitForImages(container: HTMLElement): Promise<void> {
+  const imgs = Array.from(container.querySelectorAll('img')) as HTMLImageElement[]
+  const pending = imgs.filter(img => !img.complete)
+  if (pending.length === 0) return Promise.resolve()
+  return Promise.all(pending.map(img =>
+    new Promise<void>(resolve => {
+      img.onload = () => resolve()
+      img.onerror = () => resolve()
+    })
+  )).then(() => {})
+}
+
 async function saveToImage() {
   if (!cardRef.value) return
 
-  // Convert reactive image sources to data URLs so html-to-image can embed them
+  // Convert all images in the card to data URLs so html-to-image can embed them
+  const card = cardRef.value
   const originalBg = bgImage.value
   bgImage.value = await imgToDataUrl(originalBg)
+
+  // Also inline the logo SVG
+  const logoImg = card.querySelector('.social-logo') as HTMLImageElement | null
+  const originalLogo = logoImg?.src
+  if (logoImg && logoImg.src && !logoImg.src.startsWith('data:')) {
+    logoImg.src = await imgToDataUrl(logoImg.src)
+  }
 
   exporting.value = true
   await nextTick()
 
+  // Wait for all images to finish loading their new data URL sources
+  await waitForImages(card)
+
   try {
-    const dataUrl = await toPng(cardRef.value, {
-      width: cardRef.value.offsetWidth,
-      height: cardRef.value.offsetHeight,
+    const dataUrl = await toPng(card, {
+      width: card.offsetWidth,
+      height: card.offsetHeight,
       pixelRatio: 2,
-      // Inline all remaining images (logo SVG etc.)
-      fetchRequestInit: { cache: 'force-cache' },
-      includeQueryParams: true,
     })
     const link = document.createElement('a')
     link.download = `trc-${selectedPerformance.value?.date || 'social'}.png`
@@ -377,6 +397,7 @@ async function saveToImage() {
     link.click()
   } finally {
     bgImage.value = originalBg
+    if (logoImg && originalLogo) logoImg.src = originalLogo
     exporting.value = false
   }
 }
