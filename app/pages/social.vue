@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toPng } from 'html-to-image'
+import { toCanvas } from 'html-to-image'
 import { Calendar, Check, ChevronDown, Download, Film, Image, Lock, LogOut, Move, Pencil, Play, RotateCcw, SlidersHorizontal, X } from 'lucide-vue-next'
 import { HERO_VISUAL } from '../../hero.config'
 
@@ -36,13 +36,13 @@ const { data: mediaList } = await useFetch('/api/media-list', { default: () => [
 
 const imageItems = computed(() =>
   (mediaList.value ?? []).filter(
-    (item: any) => item.type === 'image' && !item.url.includes('-hero')
+    (item: any) => item.type === 'image' && !item.url.includes('-hero') && item.hiresUrl
   )
 )
 
 const videoItems = computed(() =>
   (mediaList.value ?? []).filter(
-    (item: any) => item.type === 'video' && !item.url.includes('-hero') && !item.url.endsWith('.webm')
+    (item: any) => item.type === 'video' && !item.url.includes('-hero') && !item.url.endsWith('.webm') && item.hiresUrl
   )
 )
 
@@ -155,7 +155,7 @@ const formattedDate = computed(() => {
 })
 
 // ── Toolbar state ──
-const DEFAULT_BG = '/images/media/2026-03-29-4.webp'
+const DEFAULT_BG = '/images/media/hires/2026-03-29-4.webp'
 const toolbarOpen = ref(false)
 const perfDropdownOpen = ref(false)
 const bgOpacity = ref(HERO_VISUAL.opacity)
@@ -344,8 +344,8 @@ function cancelFrameScrubber() {
   frameScrubberVideo.value = null
 }
 
-function selectBackground(url: string) {
-  bgImage.value = url
+function selectBackground(url: string, item?: any) {
+  bgImage.value = item?.hiresUrl || url
   showMediaPicker.value = false
 }
 
@@ -362,52 +362,48 @@ async function imgToDataUrl(src: string): Promise<string> {
   })
 }
 
-function waitForImages(container: HTMLElement): Promise<void> {
-  const imgs = Array.from(container.querySelectorAll('img')) as HTMLImageElement[]
-  const pending = imgs.filter(img => !img.complete)
-  if (pending.length === 0) return Promise.resolve()
-  return Promise.all(pending.map(img =>
-    new Promise<void>(resolve => {
-      img.onload = () => resolve()
-      img.onerror = () => resolve()
-    })
-  )).then(() => {})
-}
-
 async function saveToImage() {
   if (!cardRef.value) return
 
-  // Convert all images in the card to data URLs so html-to-image can embed them
   const card = cardRef.value
-  const originalBg = bgImage.value
-  bgImage.value = await imgToDataUrl(originalBg)
 
-  // Also inline the logo SVG
-  const logoImg = card.querySelector('.social-logo') as HTMLImageElement | null
-  const originalLogo = logoImg?.src
-  if (logoImg && logoImg.src && !logoImg.src.startsWith('data:')) {
-    logoImg.src = await imgToDataUrl(logoImg.src)
+  // 1. Inline all images as data URLs before entering export mode
+  const imgs = Array.from(card.querySelectorAll('img')) as HTMLImageElement[]
+  const origSrcs = imgs.map(img => img.src)
+
+  for (const img of imgs) {
+    if (!img.src.startsWith('data:')) {
+      img.src = await imgToDataUrl(img.src)
+      // Wait for the browser to decode the new data URL
+      await new Promise<void>(resolve => {
+        if (img.complete) { resolve(); return }
+        img.onload = () => resolve()
+        img.onerror = () => resolve()
+      })
+    }
   }
 
+  // 2. Switch to export mode (hides toolbar/handles)
   exporting.value = true
   await nextTick()
-
-  // Wait for all images to finish loading their new data URL sources
-  await waitForImages(card)
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
 
   try {
-    const dataUrl = await toPng(card, {
+    // 3. Use toCanvas (more reliable than toPng for embedded images)
+    //    then extract PNG manually from the canvas
+    const canvas = await toCanvas(card, {
       width: card.offsetWidth,
       height: card.offsetHeight,
       pixelRatio: 2,
     })
+    const dataUrl = canvas.toDataURL('image/png')
     const link = document.createElement('a')
     link.download = `trc-${selectedPerformance.value?.date || 'social'}.png`
     link.href = dataUrl
     link.click()
   } finally {
-    bgImage.value = originalBg
-    if (logoImg && originalLogo) logoImg.src = originalLogo
+    // 4. Restore original src values
+    imgs.forEach((img, i) => { img.src = origSrcs[i] })
     exporting.value = false
   }
 }
@@ -558,7 +554,7 @@ useSeoMeta({
             :key="item.url"
             class="picker-item"
             :class="{ active: bgImage === item.url }"
-            @click="selectBackground(item.url)"
+            @click="selectBackground(item.url, item)"
           >
             <img :src="item.thumbnail ?? item.url" :alt="item.alt || ''" class="picker-thumb" />
           </button>
@@ -603,7 +599,7 @@ useSeoMeta({
             <canvas ref="frameScrubberCanvas" class="frame-scrubber-canvas" />
             <video
               ref="frameScrubberEl"
-              :src="frameScrubberVideo.url"
+              :src="frameScrubberVideo.hiresUrl || frameScrubberVideo.url"
               class="frame-scrubber-video-hidden"
               muted
               playsinline

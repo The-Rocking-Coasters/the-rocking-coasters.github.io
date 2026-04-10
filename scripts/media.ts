@@ -11,6 +11,7 @@ type MediaItem = {
   thumbnailType?: string
   heroClip?: string
   heroClipMp4?: string
+  hiresUrl?: string
 }
 
 /**
@@ -60,7 +61,10 @@ export function convertMedia(rootDir: string): void {
     return
   }
 
+  const hiresDir = resolve(mediaDir, 'hires')
+
   if (!existsSync(mediaDir)) mkdirSync(mediaDir, { recursive: true })
+  if (!existsSync(hiresDir)) mkdirSync(hiresDir, { recursive: true })
 
   const origFiles = readdirSync(originalDir).filter(f =>
     /\.(jpe?g|png|webp|mp4|mov|webm|ogg)$/i.test(f)
@@ -95,27 +99,48 @@ export function convertMedia(rootDir: string): void {
     const srcPath = resolve(originalDir, item.filename)
     const dstPath = resolve(mediaDir, outName)
 
-    if (existsSync(dstPath)) {
-      console.log(`[Media] Already converted, skipping: ${outName}`)
-      continue
+    // Standard web-optimised version
+    if (!existsSync(dstPath)) {
+      try {
+        if (isVideo) {
+          execSync(
+            `ffmpeg -y -i "${srcPath}" -vf "scale='min(1280,iw)':-2:flags=lanczos" ` +
+            `-c:v libx264 -crf 28 -preset medium -movflags +faststart -c:a aac -b:a 96k "${dstPath}"`,
+            { stdio: 'pipe' }
+          )
+        } else {
+          execSync(
+            `magick "${srcPath}" -resize '800x800>' -quality 80 "${dstPath}"`,
+            { stdio: 'pipe' }
+          )
+        }
+        console.log(`[Media] Converted: ${item.filename} → ${outName}`)
+      } catch (e) {
+        console.warn(`[Media] Failed to convert ${item.filename}: ${(e as Error).message}`)
+      }
     }
 
-    try {
-      if (isVideo) {
-        execSync(
-          `ffmpeg -y -i "${srcPath}" -vf "scale='min(1280,iw)':-2:flags=lanczos" ` +
-          `-c:v libx264 -crf 28 -preset medium -movflags +faststart -c:a aac -b:a 96k "${dstPath}"`,
-          { stdio: 'pipe' }
-        )
-      } else {
-        execSync(
-          `magick "${srcPath}" -resize '800x800>' -quality 80 "${dstPath}"`,
-          { stdio: 'pipe' }
-        )
+    // High-res version for social card tool
+    const hiresName = isVideo ? outName : `${outputDate}-${idx}.webp`
+    const hiresDst = resolve(hiresDir, hiresName)
+    if (!existsSync(hiresDst)) {
+      try {
+        if (isVideo) {
+          execSync(
+            `ffmpeg -y -i "${srcPath}" -vf "scale='min(1920,iw)':-2:flags=lanczos" ` +
+            `-c:v libx264 -crf 22 -preset medium -movflags +faststart -c:a aac -b:a 128k "${hiresDst}"`,
+            { stdio: 'pipe' }
+          )
+        } else {
+          execSync(
+            `magick "${srcPath}" -resize '2400x2400>' -quality 95 "${hiresDst}"`,
+            { stdio: 'pipe' }
+          )
+        }
+        console.log(`[Media] Hi-res: ${item.filename} → hires/${hiresName}`)
+      } catch (e) {
+        console.warn(`[Media] Failed hi-res convert ${item.filename}: ${(e as Error).message}`)
       }
-      console.log(`[Media] Converted: ${item.filename} → ${outName}`)
-    } catch (e) {
-      console.warn(`[Media] Failed to convert ${item.filename}: ${(e as Error).message}`)
     }
   }
 }
@@ -154,6 +179,12 @@ export function generateMediaList(rootDir: string): void {
         url: `/images/media/${file}`,
         alt: file.split('.').slice(0, -1).join('.').replace(/[_-]/g, ' '),
         type: isVideo ? 'video' : 'image',
+      }
+
+      // Hi-res URL for social card tool
+      const hiresPath = resolve(mediaDir, 'hires', file)
+      if (existsSync(hiresPath)) {
+        item.hiresUrl = `/images/media/hires/${file}`
       }
 
       if (isVideo) {
