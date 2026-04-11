@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { toCanvas } from 'html-to-image'
 import { Calendar, Check, ChevronDown, Download, Film, Image, Lock, LogOut, Move, Pencil, Play, RotateCcw, SlidersHorizontal, X } from 'lucide-vue-next'
 import { HERO_VISUAL } from '../../hero.config'
 
@@ -349,16 +348,13 @@ function selectBackground(url: string, item?: any) {
   showMediaPicker.value = false
 }
 
-async function imgToDataUrl(src: string): Promise<string> {
-  // Already a data URL
-  if (src.startsWith('data:')) return src
-
-  const resp = await fetch(src)
-  const blob = await resp.blob()
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result as string)
-    reader.readAsDataURL(blob)
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`Failed to load: ${src}`))
+    img.src = src
   })
 }
 
@@ -366,46 +362,141 @@ async function saveToImage() {
   if (!cardRef.value) return
 
   const card = cardRef.value
+  const w = card.offsetWidth
+  const h = card.offsetHeight
+  const dpr = 2
+  const cw = w * dpr
+  const ch = h * dpr
 
-  // 1. Inline all images as data URLs before entering export mode
-  const imgs = Array.from(card.querySelectorAll('img')) as HTMLImageElement[]
-  const origSrcs = imgs.map(img => img.src)
+  // Ensure fonts are ready
+  await document.fonts.ready
 
-  for (const img of imgs) {
-    if (!img.src.startsWith('data:')) {
-      img.src = await imgToDataUrl(img.src)
-      // Wait for the browser to decode the new data URL
-      await new Promise<void>(resolve => {
-        if (img.complete) { resolve(); return }
-        img.onload = () => resolve()
-        img.onerror = () => resolve()
-      })
+  // Load images
+  const [bgImg, logoImg] = await Promise.all([
+    loadImage(bgImage.value),
+    loadImage('/images/logo.svg'),
+  ])
+
+  const canvas = document.createElement('canvas')
+  canvas.width = cw
+  canvas.height = ch
+  const ctx = canvas.getContext('2d')!
+  ctx.scale(dpr, dpr)
+
+  // 1. Black background
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, w, h)
+
+  // 2. Background image with opacity (cover)
+  ctx.save()
+  ctx.globalAlpha = bgOpacity.value
+  const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight
+  const cardRatio = w / h
+  let drawW: number, drawH: number, drawX: number, drawY: number
+  if (imgRatio > cardRatio) {
+    drawH = h; drawW = h * imgRatio
+    drawX = (w - drawW) / 2; drawY = 0
+  } else {
+    drawW = w; drawH = w / imgRatio
+    drawX = 0; drawY = (h - drawH) / 2
+  }
+  ctx.drawImage(bgImg, drawX, drawY, drawW, drawH)
+  ctx.restore()
+
+  // 3. Gradient overlay
+  const grad = ctx.createLinearGradient(0, 0, 0, h)
+  grad.addColorStop(0, 'rgba(0,0,0,0.3)')
+  grad.addColorStop(0.3, 'rgba(0,0,0,0)')
+  grad.addColorStop(0.5, 'rgba(0,0,0,0)')
+  grad.addColorStop(0.75, 'rgba(0,0,0,0.6)')
+  grad.addColorStop(1, 'rgba(0,0,0,0.85)')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, w, h)
+
+  // 4. Logo — read actual rendered position from DOM
+  const logoEl = card.querySelector('.social-logo') as HTMLElement | null
+  if (logoEl) {
+    const logoRect = logoEl.getBoundingClientRect()
+    const cardRect = card.getBoundingClientRect()
+    const lx = logoRect.left - cardRect.left
+    const ly = logoRect.top - cardRect.top
+    ctx.drawImage(logoImg, lx, ly, logoRect.width, logoRect.height)
+  }
+
+  // 5. Text — read positions and computed styles from the actual DOM elements
+  const cardRect = card.getBoundingClientRect()
+
+  function drawTextElement(el: HTMLElement) {
+    const rect = el.getBoundingClientRect()
+    const style = getComputedStyle(el)
+    const x = rect.left - cardRect.left + rect.width / 2
+    const y = rect.top - cardRect.top
+
+    ctx.textAlign = 'center'
+    ctx.font = style.font
+    ctx.fillStyle = style.color
+    ctx.letterSpacing = style.letterSpacing
+
+    // Handle text-shadow
+    const shadow = style.textShadow
+    if (shadow && shadow !== 'none') {
+      const m = shadow.match(/rgba?\([^)]+\)\s+([\d.-]+)px\s+([\d.-]+)px\s+([\d.-]+)px/)
+      if (m) {
+        ctx.shadowColor = shadow.substring(0, shadow.indexOf(')') + 1)
+        ctx.shadowOffsetX = parseFloat(m[1])
+        ctx.shadowOffsetY = parseFloat(m[2])
+        ctx.shadowBlur = parseFloat(m[3])
+      }
     }
+
+    ctx.fillText(el.textContent?.trim() || '', x, y + rect.height * 0.82)
+
+    ctx.shadowColor = 'transparent'
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
   }
 
-  // 2. Switch to export mode (hides toolbar/handles)
-  exporting.value = true
-  await nextTick()
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  function drawBadgeElement(el: HTMLElement) {
+    const rect = el.getBoundingClientRect()
+    const style = getComputedStyle(el)
+    const x = rect.left - cardRect.left
+    const y = rect.top - cardRect.top
 
-  try {
-    // 3. Use toCanvas (more reliable than toPng for embedded images)
-    //    then extract PNG manually from the canvas
-    const canvas = await toCanvas(card, {
-      width: card.offsetWidth,
-      height: card.offsetHeight,
-      pixelRatio: 2,
-    })
-    const dataUrl = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.download = `trc-${selectedPerformance.value?.date || 'social'}.png`
-    link.href = dataUrl
-    link.click()
-  } finally {
-    // 4. Restore original src values
-    imgs.forEach((img, i) => { img.src = origSrcs[i] })
-    exporting.value = false
+    // Background
+    ctx.fillStyle = style.backgroundColor
+    ctx.fillRect(x, y, rect.width, rect.height)
+
+    // Border
+    if (style.borderColor && style.borderStyle !== 'none') {
+      ctx.strokeStyle = style.borderColor
+      ctx.lineWidth = parseFloat(style.borderWidth)
+      ctx.strokeRect(x, y, rect.width, rect.height)
+    }
+
+    // Text
+    ctx.textAlign = 'center'
+    ctx.font = style.font
+    ctx.fillStyle = style.color
+    ctx.letterSpacing = style.letterSpacing
+    ctx.fillText(el.textContent?.trim() || '', x + rect.width / 2, y + rect.height * 0.72)
   }
+
+  // Draw all text elements by querying the live DOM
+  const holidayEl = card.querySelector('.social-holiday') as HTMLElement | null
+  if (holidayEl) drawBadgeElement(holidayEl)
+
+  for (const selector of ['.social-date', '.social-time', '.social-venue', '.social-address', '.social-entrance']) {
+    const el = card.querySelector(selector) as HTMLElement | null
+    if (el) drawTextElement(el)
+  }
+
+  // 6. Download
+  const dataUrl = canvas.toDataURL('image/png')
+  const link = document.createElement('a')
+  link.download = `trc-${selectedPerformance.value?.date || 'social'}.png`
+  link.href = dataUrl
+  link.click()
 }
 
 useSeoMeta({
